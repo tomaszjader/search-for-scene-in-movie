@@ -1,0 +1,24 @@
+{
+  "name": "framefinder",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently \"vite\" \"node --watch server.js\"",
+    "build": "vite build",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@vitejs/plugin-react": "latest",
+    "concurrently": "latest",
+    "dotenv": "latest",
+    "express": "latest",
+    "lucide-react": "latest",
+    "multer": "latest",
+    "openai": "latest",
+    "vite": "latest",
+    "react": "latest",
+    "react-dom": "latest"
+  },
+  "devDependencies": {}
+}

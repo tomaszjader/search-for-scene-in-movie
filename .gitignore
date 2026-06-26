@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Production build
+dist/
+
+# Local environment variables and API keys
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Uploaded media and temporary files
+uploads/
+*.tmp
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Test coverage
+coverage/
+
+# Editors and operating systems
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db
+
+# Vite cache
+.vite/
