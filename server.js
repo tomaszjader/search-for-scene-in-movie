@@ -4,9 +4,28 @@ import multer from 'multer'
 import OpenAI from 'openai'
 import fs from 'node:fs'
 import path from 'node:path'
+import crypto from 'node:crypto'
 
 const app = express()
-const upload = multer({ dest: 'uploads/', limits: { fileSize: 200 * 1024 * 1024 } })
+const uploadDir = path.resolve('uploads')
+fs.mkdirSync(uploadDir, { recursive: true })
+
+const supportedExtensions = new Set(['.flac', '.m4a', '.mp3', '.mp4', '.mpeg', '.mpga', '.oga', '.ogg', '.wav', '.webm'])
+const storage = multer.diskStorage({
+  destination: uploadDir,
+  filename: (_req, file, callback) => {
+    const extension = path.extname(file.originalname).toLowerCase()
+    callback(null, `${crypto.randomUUID()}${extension}`)
+  }
+})
+const upload = multer({
+  storage,
+  limits: { fileSize: 200 * 1024 * 1024 },
+  fileFilter: (_req, file, callback) => {
+    const extension = path.extname(file.originalname).toLowerCase()
+    callback(supportedExtensions.has(extension) ? null : new Error(`Nieobsługiwany format ${extension || '(brak rozszerzenia)'}. Wybierz MP4, MP3, WAV, M4A, WEBM, MPEG, OGG albo FLAC.`), supportedExtensions.has(extension))
+  }
+})
 app.use(express.json({ limit: '10mb' }))
 
 app.post('/api/transcribe', upload.single('video'), async (req, res) => {
@@ -21,6 +40,14 @@ app.post('/api/transcribe', upload.single('video'), async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message || 'Nie udało się utworzyć transkrypcji.' })
   } finally { fs.unlink(req.file.path, () => {}) }
+})
+
+app.use((error, _req, res, next) => {
+  if (error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({ error: 'Plik jest zbyt duży. Maksymalny rozmiar to 200 MB.' })
+  }
+  if (error) return res.status(400).json({ error: error.message })
+  next()
 })
 
 app.post('/api/search', async (req, res) => {
