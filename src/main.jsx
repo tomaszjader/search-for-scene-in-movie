@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { createRoot } from 'react-dom/client'
-import { Upload, Search, Sparkles, Play, FileVideo, Clock, ChevronRight, X, Check, LoaderCircle, Captions, Command, CornerDownLeft } from 'lucide-react'
+import { ArrowUpRight, Captions, Check, Clock3, Command, CornerDownLeft, FileVideo2, LoaderCircle, Play, Search, Sparkles, Upload, X } from 'lucide-react'
 import './styles.css'
 
 const demo = [
@@ -13,61 +13,138 @@ const demo = [
   { id: 7, start: 104, end: 116, text: 'W przyszłości chcemy automatycznie tworzyć krótkie klipy i podpisy, ale zawsze pozostawić decyzję człowiekowi.' }
 ]
 
-const fmt = n => `${String(Math.floor(n / 60)).padStart(2, '0')}:${String(Math.floor(n % 60)).padStart(2, '0')}`
+const fmt = value => `${String(Math.floor(value / 60)).padStart(2, '0')}:${String(Math.floor(value % 60)).padStart(2, '0')}`
 
 function App() {
-  const [file, setFile] = useState(null), [url, setUrl] = useState(''), [segments, setSegments] = useState([])
-  const [query, setQuery] = useState(''), [results, setResults] = useState([]), [status, setStatus] = useState('idle'), [error, setError] = useState('')
-  const input = useRef(), video = useRef()
+  const [file, setFile] = useState(null)
+  const [url, setUrl] = useState('')
+  const [segments, setSegments] = useState([])
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState([])
+  const [status, setStatus] = useState('idle')
+  const [error, setError] = useState('')
+  const [activeResult, setActiveResult] = useState(null)
+  const input = useRef()
+  const video = useRef()
+  const clipEnd = useRef(null)
 
-  const choose = chosen => { if (!chosen) return; setFile(chosen); setUrl(URL.createObjectURL(chosen)); setSegments([]); setResults([]); setError('') }
+  const choose = chosen => {
+    if (!chosen) return
+    setFile(chosen)
+    setUrl(URL.createObjectURL(chosen))
+    setSegments([])
+    setResults([])
+    setError('')
+  }
+
+  const reset = () => {
+    if (url) URL.revokeObjectURL(url)
+    setFile(null); setUrl(''); setSegments([]); setResults([]); setQuery(''); setError('')
+  }
+
   const transcribe = async () => {
     if (!file) return
     setStatus('transcribing'); setError('')
     const form = new FormData(); form.append('video', file)
-    try { const r = await fetch('/api/transcribe', { method: 'POST', body: form }); const d = await r.json(); if (!r.ok) throw new Error(d.error); setSegments(d.segments); setStatus('ready') }
-    catch (e) { setError(e.message); setStatus('idle') }
-  }
-  const loadDemo = () => { setFile({ name: 'Rozmowa_z_zespolem.mp4', size: 482000000 }); setUrl(''); setSegments(demo); setStatus('ready'); setResults([]); setError('') }
-  const search = async e => {
-    e?.preventDefault(); if (!query.trim() || !segments.length) return
-    setStatus('searching'); setError('')
     try {
-      const r = await fetch('/api/search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query, segments }) }); const d = await r.json(); if (!r.ok) throw new Error(d.error)
-      setResults(d.ids.map(id => segments.find(s => s.id === id)).filter(Boolean)); setStatus('ready')
-    } catch {
-      const words = query.toLowerCase().replace(/[^a-ząćęłńóśźż ]/g, '').split(/\s+/).filter(w => w.length > 3)
-      const scored = segments.map(s => ({ ...s, score: words.filter(w => s.text.toLowerCase().includes(w)).length })).sort((a,b) => b.score-a.score)
-      setResults((scored[0]?.score ? scored.filter(s => s.score > 0) : scored).slice(0, 3)); setStatus('ready')
+      const response = await fetch('/api/transcribe', { method: 'POST', body: form })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error)
+      setSegments(data.segments); setStatus('ready')
+    } catch (cause) {
+      setError(cause.message); setStatus('idle')
     }
   }
-  const seek = s => { if (video.current && url) { video.current.currentTime = s.start; video.current.play() } }
 
-  return <div className="app">
-    <header><a className="logo" href="#"><span><Play size={15} fill="currentColor" /></span> framefinder</a><div className="badge"><i></i> AI video search</div><button className="ghost">Jak to działa?</button></header>
+  const loadDemo = () => {
+    setFile({ name: 'Rozmowa_z_zespołem.mp4', size: 48200000 })
+    setUrl(''); setSegments(demo); setStatus('ready'); setResults([]); setError('')
+  }
+
+  const search = async event => {
+    event?.preventDefault()
+    if (!query.trim() || !segments.length) return
+    setStatus('searching'); setError('')
+    try {
+      const response = await fetch('/api/search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query, segments }) })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error)
+      setResults(data.ids.map(id => segments.find(segment => segment.id === id)).filter(Boolean)); setStatus('ready')
+    } catch {
+      const words = query.toLowerCase().replace(/[^a-ząćęłńóśźż ]/g, '').split(/\s+/).filter(word => word.length > 3)
+      const scored = segments.map(segment => ({ ...segment, score: words.filter(word => segment.text.toLowerCase().includes(word)).length })).sort((a, b) => b.score - a.score)
+      setResults((scored[0]?.score ? scored.filter(segment => segment.score > 0) : scored).slice(0, 3)); setStatus('ready')
+    }
+  }
+
+  const playClip = segment => {
+    if (!video.current || !url) return
+    clipEnd.current = segment.end; setActiveResult(segment.id)
+    video.current.currentTime = segment.start; video.current.play()
+  }
+
+  const watchClipEnd = () => {
+    if (!video.current || clipEnd.current === null) return
+    if (video.current.currentTime >= clipEnd.current) {
+      video.current.pause(); video.current.currentTime = clipEnd.current
+      clipEnd.current = null; setActiveResult(null)
+    }
+  }
+
+  return <div className="app-shell">
+    <header className="topbar">
+      <a className="brand" href="#"><span className="brand-mark"><Play size={12} fill="currentColor" /></span><span>framefinder</span></a>
+      <div className="top-status"><i /> Semantic video search <span>v1.0</span></div>
+      <a className="how-link" href="#workflow">Jak to działa <ArrowUpRight size={14} /></a>
+    </header>
+
     <main>
-      <section className="hero"><div className="eyebrow"><Sparkles size={14}/> Znajdź właściwy moment. Natychmiast.</div><h1>Nie przewijaj.<br/><em>Po prostu zapytaj.</em></h1><p>Wrzuć nagranie i opisz scenę, której szukasz. Framefinder zrozumie transkrypcję i wskaże dokładne momenty.</p></section>
+      <section className="hero">
+        <div className="hero-kicker"><Sparkles size={13} /> Wyszukiwarka momentów w wideo</div>
+        <h1>Zapytaj nagranie.<br /><em>Znajdź właściwy kadr.</em></h1>
+        <p>Przeszukuj godziny materiału tak, jak pytasz człowieka. Bez ręcznego przewijania, bez zgadywania timestampów.</p>
+        <div className="hero-meta"><span>WIDEO + AUDIO</span><span>JĘZYK NATURALNY</span><span>PRECYZJA DO SEKUNDY</span></div>
+      </section>
 
-      {!file ? <section className="upload" onDragOver={e=>e.preventDefault()} onDrop={e=>{e.preventDefault(); choose(e.dataTransfer.files[0])}} onClick={()=>input.current.click()}>
-        <input ref={input} type="file" accept="video/*,audio/*" hidden onChange={e=>choose(e.target.files[0])}/><div className="uploadIcon"><Upload size={25}/></div>
-        <h2>Upuść tutaj swoje nagranie</h2><p>lub kliknij, aby wybrać plik</p><div className="formats"><span>MP4</span><span>MOV</span><span>WEBM</span><span>MP3</span><b>do 200 MB</b></div>
-        <button className="demo" onClick={e=>{e.stopPropagation();loadDemo()}}><Play size={14} fill="currentColor"/> Wypróbuj na przykładzie</button>
+      {!file ? <section className="upload-stage" onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); choose(event.dataTransfer.files[0]) }} onClick={() => input.current.click()}>
+        <input ref={input} type="file" accept="video/*,audio/*" hidden onChange={event => choose(event.target.files[0])} />
+        <div className="drop-visual"><div className="upload-orbit"><Upload size={25} /></div><span className="corner corner-a" /><span className="corner corner-b" /></div>
+        <span className="step-label">01 / DODAJ MATERIAŁ</span>
+        <h2>Upuść nagranie, aby zacząć</h2>
+        <p>lub kliknij i wybierz plik z dysku</p>
+        <div className="file-spec"><span>MP4</span><span>MOV</span><span>WEBM</span><span>MP3</span><b>MAX 200 MB</b></div>
+        <button className="text-action" onClick={event => { event.stopPropagation(); loadDemo() }}><Play size={12} fill="currentColor" /> Otwórz materiał demo</button>
       </section> : <section className="workspace">
-        <div className="mediaPanel">
-          <div className="panelTop"><div className="fileIcon"><FileVideo size={19}/></div><div><strong>{file.name}</strong><span>{(file.size/1000000).toFixed(1)} MB · {segments.length ? `${segments.length} fragmentów` : 'gotowy do analizy'}</span></div><button onClick={()=>{setFile(null);setUrl('');setSegments([]);setResults([])}}><X size={18}/></button></div>
-          <div className="screen">{url ? <video ref={video} src={url} controls/> : <div className="demoScreen"><div><Play size={25} fill="currentColor"/></div><span>Tryb demonstracyjny</span></div>}<div className="scanline"/></div>
-          {segments.length ? <div className="ready"><Check size={15}/> Transkrypcja gotowa <span>{segments.length} fragmentów</span></div> : <button className="primary full" onClick={transcribe} disabled={status==='transcribing'}>{status==='transcribing'?<LoaderCircle className="spin" size={18}/>:<Captions size={18}/>} {status==='transcribing'?'Analizuję nagranie…':'Utwórz transkrypcję'}</button>}
+        <aside className="media-panel panel">
+          <div className="panel-heading">
+            <span className="panel-index">01</span>
+            <div className="file-copy"><strong>{file.name}</strong><small>{(file.size / 1000000).toFixed(1)} MB · {segments.length ? `${segments.length} fragmentów` : 'gotowy do analizy'}</small></div>
+            <button className="icon-button" onClick={reset} aria-label="Usuń plik"><X size={16} /></button>
+          </div>
+          <div className="viewer">
+            {url ? <video ref={video} src={url} controls onTimeUpdate={watchClipEnd} /> : <div className="demo-view"><span className="demo-play"><Play size={21} fill="currentColor" /></span><strong>Materiał demonstracyjny</strong><small>01:56 · rozmowa zespołu</small></div>}
+            <div className="view-tag">SOURCE / 01</div><div className="scanline" />
+          </div>
+          {segments.length ? <div className="analysis-ready"><span><Check size={13} /> Analiza gotowa</span><b>{segments.length} segmentów</b></div> : <button className="primary-action" onClick={transcribe} disabled={status === 'transcribing'}>{status === 'transcribing' ? <LoaderCircle className="spin" size={17} /> : <Captions size={17} />}{status === 'transcribing' ? 'Analizuję materiał…' : 'Utwórz transkrypcję'}</button>}
           {error && <div className="error">{error}</div>}
-        </div>
-        <div className="searchPanel">
-          <div className="searchHead"><div><span>02</span><div><strong>O co chodziło?</strong><small>Opisz moment własnymi słowami</small></div></div><div className="shortcut"><Command size={12}/> K</div></div>
-          <form onSubmit={search} className="searchbox"><Search size={20}/><input value={query} onChange={e=>setQuery(e.target.value)} disabled={!segments.length} placeholder="np. Gdzie Paweł mówił o zmianie produktu?"/><button disabled={!query.trim()||!segments.length}>{status==='searching'?<LoaderCircle className="spin" size={18}/>:<CornerDownLeft size={17}/>}</button></form>
-          <div className="suggestions"><span>Spróbuj:</span>{['Co było najtrudniejsze?','Kto zmienił kierunek?','Jakie są plany?'].map(x=><button key={x} onClick={()=>setQuery(x)}>{x}</button>)}</div>
-          <div className="resultArea">{!results.length ? <div className="empty"><div className="rings"><Sparkles size={23}/></div><strong>{segments.length?'Zapytaj o dowolny moment':'Najpierw przeanalizuj nagranie'}</strong><p>Wyniki pojawią się tutaj wraz z dokładnym czasem i cytatem.</p></div> : <><div className="resultTitle"><strong>Znalezione momenty</strong><span>{results.length} {results.length===1?'trafienie':'trafienia'}</span></div><div className="cards">{results.map((r,i)=><button className="result" key={r.id} onClick={()=>seek(r)}><div className="rank">0{i+1}</div><div className="resultBody"><div><span className="time"><Clock size={12}/>{fmt(r.start)}–{fmt(r.end)}</span><span className="match">{Math.max(78,96-i*7)}% zgodności</span></div><p>„{r.text}”</p></div><div className="play"><Play size={14} fill="currentColor"/></div></button>)}</div></>}</div>
-        </div>
+        </aside>
+
+        <section className="search-panel panel">
+          <div className="panel-heading search-heading"><span className="panel-index">02</span><div><strong>Znajdź moment</strong><small>Opisz scenę, wypowiedź lub emocję</small></div><div className="key"><Command size={11} /> K</div></div>
+          <form onSubmit={search} className="search-field"><Search size={19} /><input value={query} onChange={event => setQuery(event.target.value)} disabled={!segments.length} placeholder="Gdzie Paweł mówił o zmianie produktu?" /><button disabled={!query.trim() || !segments.length} aria-label="Szukaj">{status === 'searching' ? <LoaderCircle className="spin" size={17} /> : <CornerDownLeft size={16} />}</button></form>
+          <div className="suggestions"><span>Podpowiedzi</span>{['Co było najtrudniejsze?', 'Kto zmienił kierunek?', 'Jakie są plany?'].map(item => <button key={item} onClick={() => setQuery(item)}>{item}</button>)}</div>
+          <div className="results-area">
+            {!results.length ? <div className="empty-state"><div className="empty-glyph"><Search size={20} /></div><strong>{segments.length ? 'Materiał czeka na pytanie' : 'Najpierw przeanalizuj nagranie'}</strong><p>Każdy wynik otrzyma dokładny timestamp i cytat z transkrypcji.</p></div> : <><div className="results-header"><span>Najlepsze dopasowania</span><b>{String(results.length).padStart(2, '0')}</b></div><div className="result-list">{results.map((result, index) => <button className={`result-card ${activeResult === result.id ? 'active' : ''}`} key={result.id} onClick={() => playClip(result)}>
+              <span className="result-number">0{index + 1}</span><div className="result-content"><div className="result-meta"><span><Clock3 size={12} /> {fmt(result.start)} — {fmt(result.end)}</span><b>{activeResult === result.id ? 'PLAYING' : `${Math.max(78, 96 - index * 7)}% MATCH`}</b></div><p>„{result.text}”</p></div><span className="result-play"><Play size={13} fill="currentColor" /></span>
+            </button>)}</div></>}
+          </div>
+        </section>
       </section>}
-      <div className="steps"><div><span>01</span><p><b>Wrzuć nagranie</b>Wideo lub audio</p></div><ChevronRight/><div><span>02</span><p><b>Zadaj pytanie</b>Naturalnym językiem</p></div><ChevronRight/><div><span>03</span><p><b>Przejdź do sceny</b>Co do sekundy</p></div></div>
-    </main><footer><span>framefinder / 2026</span><p>Twoje nagrania nie są nigdzie publikowane.</p><span>PL <i>·</i> EN</span></footer>
+
+      <section className="workflow" id="workflow"><span className="workflow-label">Jak to działa</span><div className="workflow-items"><div><b>01</b><span><strong>Wrzuć materiał</strong><small>Wideo lub audio</small></span></div><div><b>02</b><span><strong>Zadaj pytanie</strong><small>Własnymi słowami</small></span></div><div><b>03</b><span><strong>Przejdź do sceny</strong><small>Co do sekundy</small></span></div></div></section>
+    </main>
+
+    <footer><span>© 2026 FRAMEFINDER</span><p>Prywatne nagrania. Precyzyjne odpowiedzi.</p><span>PL / EN</span></footer>
   </div>
 }
 
