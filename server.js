@@ -163,10 +163,33 @@ app.post('/api/search', async (req, res) => {
   try {
     const response = await client.responses.create({
       model: 'gpt-4.1-mini',
-      input: `Wybierz maksymalnie 6 segmentów transkrypcji pasujących znaczeniowo do pytania. Zwróć wyłącznie JSON {"ids":[numery]} uporządkowany od najlepszego trafienia.\nPytanie: ${query}\nSegmenty: ${JSON.stringify(segments)}`
+      input: `Wybierz maksymalnie 6 segmentów transkrypcji pasujących znaczeniowo do pytania. Uporządkuj ich identyfikatory od najlepszego trafienia. Jeśli nic nie pasuje, zwróć pustą tablicę.\nPytanie: ${query}\nSegmenty: ${JSON.stringify(segments)}`,
+      text: {
+        format: {
+          type: 'json_schema',
+          name: 'transcript_search_results',
+          strict: true,
+          schema: {
+            type: 'object',
+            properties: {
+              ids: {
+                type: 'array',
+                items: { type: 'integer' },
+                maxItems: 6
+              }
+            },
+            required: ['ids'],
+            additionalProperties: false
+          }
+        }
+      }
     })
-    const parsed = JSON.parse(response.output_text.match(/\{[\s\S]*\}/)?.[0] || '{"ids":[]}')
-    res.json({ ids: Array.isArray(parsed.ids) ? parsed.ids : [] })
+    if (!response.output_text) throw new Error('Model nie zwrócił wyników wyszukiwania.')
+
+    const parsed = JSON.parse(response.output_text)
+    const validIds = new Set(segments.map(segment => segment.id))
+    const ids = [...new Set(parsed.ids)].filter(id => Number.isInteger(id) && validIds.has(id)).slice(0, 6)
+    res.json({ ids })
   } catch (error) { res.status(500).json({ error: error.message || 'Wyszukiwanie nie powiodło się.' }) }
 })
 
