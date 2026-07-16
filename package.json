@@ -4,23 +4,15 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently \"vite\" \"node --watch server.js\"",
+    "dev": "vite",
     "build": "vite build",
-    "start": "node server.js"
+    "preview": "vite preview"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
-    "concurrently": "latest",
-    "dotenv": "latest",
-    "express": "latest",
-    "ffmpeg-static": "^5.3.0",
     "lucide-react": "latest",
-    "multer": "latest",
-    "openai": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "vite": "latest",
-    "youtube-dl-exec": "^3.1.8",
-    "youtube-transcript-plus": "^2.0.0"
+    "vite": "latest"
   }
 }

@@ -16,6 +16,18 @@ const fmt = value => `${String(Math.floor(value / 60)).padStart(2, '0')}:${Strin
 
 const queryWords = value => value.toLowerCase().match(/[\p{L}\p{N}]+/gu)?.filter(word => word.length > 2) || []
 
+const youtubeId = value => {
+  try {
+    const url = new URL(value.trim())
+    if (url.hostname === 'youtu.be') return url.pathname.slice(1).split('/')[0]
+    if (url.hostname.endsWith('youtube.com')) {
+      if (url.pathname === '/watch') return url.searchParams.get('v')
+      return url.pathname.match(/^\/(?:shorts|embed|live)\/([^/?]+)/)?.[1] || null
+    }
+  } catch {}
+  return null
+}
+
 function HighlightedText({ text, query }) {
   const words = queryWords(query)
   if (!words.length) return text
@@ -50,50 +62,35 @@ function App() {
     setSource(null); setLocalUrl(''); setYoutubeUrl(''); setSegments([]); setResults([]); setQuery(''); setError(''); setStatus('idle'); setEmbedRange(null)
   }
 
-  const transcribe = async () => {
+  const transcribe = () => {
     if (!source?.file) return
-    setStatus('transcribing'); setError('')
-    const form = new FormData(); form.append('video', source.file)
-    try {
-      const response = await fetch('/api/transcribe', { method: 'POST', body: form })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.error)
-      setSegments(data.segments); setStatus('ready')
-    } catch (cause) { setError(cause.message); setStatus('idle') }
+    setError('Automatyczna transkrypcja wymaga usługi serwerowej. W wersji frontendowej możesz odtworzyć plik lub skorzystać z materiału demo.')
   }
 
-  const importYoutube = async event => {
+  const importYoutube = event => {
     event.preventDefault()
     if (!youtubeUrl.trim()) return
-    setStatus('importing'); setError('')
-    try {
-      const response = await fetch('/api/youtube', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url: youtubeUrl }) })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.error)
-      setSource({ type: 'youtube', name: data.title, author: data.author, duration: data.duration, videoId: data.videoId, transcriptSource: data.transcriptSource })
-      setSegments(data.segments); setResults([]); setEmbedRange(null); setStatus('ready')
-    } catch (cause) { setError(cause.message); setStatus('idle') }
+    const videoId = youtubeId(youtubeUrl)
+    if (!videoId || !/^[\w-]{11}$/.test(videoId)) {
+      setError('Wklej prawidłowy link do filmu z YouTube.')
+      return
+    }
+    setSource({ type: 'youtube', name: 'Film z YouTube', author: 'YouTube', duration: 0, videoId })
+    setSegments([]); setResults([]); setEmbedRange(null); setStatus('ready'); setError('')
   }
 
   const loadDemo = () => {
     setSource({ type: 'demo', name: 'Rozmowa z zespołem.mp4', size: 48200000 }); setLocalUrl(''); setSegments(demo); setStatus('ready'); setResults([]); setError('')
   }
 
-  const search = async event => {
+  const search = event => {
     event?.preventDefault()
     if (!query.trim() || !segments.length) return
     setStatus('searching'); setError('')
-    try {
-      const response = await fetch('/api/search', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ query, segments }) })
-      const data = await response.json()
-      if (!response.ok) throw new Error(data.error)
-      setResults(data.ids.map(id => segments.find(segment => segment.id === id)).filter(Boolean)); setStatus('ready')
-    } catch (cause) {
-      const words = query.toLowerCase().replace(/[^a-ząćęłńóśźż ]/g, '').split(/\s+/).filter(word => word.length > 3)
-      const scored = segments.map(segment => ({ ...segment, score: words.filter(word => segment.text.toLowerCase().includes(word)).length })).sort((a, b) => b.score - a.score)
-      setResults((scored[0]?.score ? scored.filter(segment => segment.score > 0) : scored).slice(0, 3)); setStatus('ready')
-      if (!scored[0]?.score) setError(cause.message || 'Nie udało się wykonać wyszukiwania semantycznego.')
-    }
+    const words = queryWords(query)
+    const scored = segments.map(segment => ({ ...segment, score: words.filter(word => segment.text.toLowerCase().includes(word)).length })).sort((a, b) => b.score - a.score)
+    setResults((scored[0]?.score ? scored.filter(segment => segment.score > 0) : scored).slice(0, 3)); setStatus('ready')
+    if (!scored[0]?.score) setError('Brak dokładnego dopasowania — pokazuję najbliższe fragmenty demonstracyjne.')
   }
 
   const playClip = segment => {
@@ -112,12 +109,12 @@ function App() {
   const duration = Math.max(source?.duration || 0, ...segments.map(segment => segment.end), 1)
 
   return <div className="app-shell">
-    <header className="topbar"><a className="brand" href="#"><span className="brand-mark"><Play size={12} fill="currentColor" /></span><span>framefinder</span></a><div className="top-status"><i /> Semantic video search <span>v1.1</span></div><a className="how-link" href="#workflow">Jak to działa <ArrowUpRight size={14} /></a></header>
+    <header className="topbar"><a className="brand" href="#"><span className="brand-mark"><Play size={12} fill="currentColor" /></span><span>framefinder</span></a><div className="top-status"><i /> Frontend-only <span>v2.0</span></div><a className="how-link" href="#workflow">Jak to działa <ArrowUpRight size={14} /></a></header>
     <main>
       <section className="hero"><div className="hero-kicker"><Sparkles size={13} /> Wyszukiwarka momentów w wideo</div><h1>Zapytaj nagranie.<br /><em>Znajdź właściwy kadr.</em></h1><p>Wklej link YouTube lub dodaj własny plik. Opisz scenę, wypowiedź albo temat, a dostaniesz dokładny fragment.</p><div className="hero-meta"><span>YOUTUBE + PLIKI</span><span>JĘZYK NATURALNY</span><span>PRECYZJA DO SEKUNDY</span></div></section>
 
       {!source ? <section className="source-stage">
-        <form className="youtube-import" onSubmit={importYoutube}><div className="youtube-icon"><Play size={25} fill="currentColor" /></div><div className="youtube-copy"><span className="step-label">01 / LINK YOUTUBE</span><strong>Wklej link do filmu</strong><small>Napisy nie są wymagane</small></div><div className="url-field"><Link2 size={17} /><input type="url" value={youtubeUrl} onChange={event => setYoutubeUrl(event.target.value)} placeholder="https://youtube.com/watch?v=..." /><button disabled={!youtubeUrl.trim() || status === 'importing'}>{status === 'importing' ? <LoaderCircle className="spin" size={17} /> : 'Analizuj'}</button></div></form>
+        <form className="youtube-import" onSubmit={importYoutube}><div className="youtube-icon"><Play size={25} fill="currentColor" /></div><div className="youtube-copy"><span className="step-label">01 / LINK YOUTUBE</span><strong>Wklej link do filmu</strong><small>Odtwarzanie bezpośrednio z YouTube</small></div><div className="url-field"><Link2 size={17} /><input type="url" value={youtubeUrl} onChange={event => setYoutubeUrl(event.target.value)} placeholder="https://youtube.com/watch?v=..." /><button disabled={!youtubeUrl.trim() || status === 'importing'}>{status === 'importing' ? <LoaderCircle className="spin" size={17} /> : 'Otwórz'}</button></div></form>
         <div className="source-divider"><span>albo</span></div>
         <div className="upload-stage compact" onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); choose(event.dataTransfer.files[0]) }} onClick={() => input.current.click()}><input ref={input} type="file" accept="video/*,audio/*" hidden onChange={event => choose(event.target.files[0])} /><div className="upload-orbit"><Upload size={23} /></div><div><span className="step-label">PLIK Z DYSKU</span><h2>Upuść nagranie lub wybierz plik</h2><p>MP4, WEBM, MP3, WAV · maks. 200 MB</p></div><button className="text-action" onClick={event => { event.stopPropagation(); loadDemo() }}><Play size={12} fill="currentColor" /> Demo</button></div>
         {error && <div className="error source-error">{error}</div>}
