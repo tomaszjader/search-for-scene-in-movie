@@ -1,33 +1,51 @@
 # FrameFinder
 
-FrameFinder jest statyczną aplikacją frontendową zbudowaną w React i Vite. Nie wymaga Node.js ani osobnego API po wdrożeniu i może być hostowana na dowolnym hostingu plików statycznych.
+FrameFinder to frontendowa aplikacja do wyszukiwania konkretnych momentów w nagraniach. Została zbudowana w React i Vite i działa w całości w przeglądarce.
 
 ## Funkcje
 
-- osadzanie filmu z YouTube na podstawie linku,
-- lokalne odtwarzanie plików audio i wideo bez wysyłania ich na serwer,
+- otwieranie filmów z YouTube na podstawie linku,
+- lokalne odtwarzanie plików audio i wideo,
+- przeciąganie plików metodą „przeciągnij i upuść”,
 - materiał demonstracyjny z przykładową transkrypcją,
-- lokalne wyszukiwanie tekstowe w transkrypcji demo,
-- przechodzenie do znalezionych fragmentów.
+- wyszukiwanie tekstowe w transkrypcji demo,
+- wyświetlanie dopasowanych fragmentów z timestampami,
+- przechodzenie do wybranego momentu nagrania.
 
-Automatyczna transkrypcja i wyszukiwanie przez OpenAI nie są dostępne w wariancie wyłącznie frontendowym. Wywołanie OpenAI bezpośrednio z przeglądarki ujawniłoby klucz API użytkownikom aplikacji.
+## Ograniczenia wersji demonstracyjnej
 
-## Uruchomienie
+Automatyczna transkrypcja przesłanych plików oraz semantyczne wyszukiwanie w filmach z YouTube nie są obecnie dostępne. Te funkcje wymagają usługi backendowej — bezpośrednie wywoływanie zewnętrznego API z przeglądarki ujawniłoby klucz API użytkownikom aplikacji.
+
+Pełny przepływ wyszukiwania można przetestować, wybierając **Demo** na ekranie startowym. Dodane pliki pozostają lokalnie w przeglądarce i nie są wysyłane na serwer.
+
+## Wymagania
+
+- Node.js 18 lub nowszy,
+- npm.
+
+Node.js jest potrzebny tylko do uruchomienia środowiska deweloperskiego i zbudowania aplikacji. Gotowa wersja produkcyjna składa się ze statycznych plików.
+
+## Uruchomienie lokalne
 
 ```bash
 npm install
 npm run dev
 ```
 
-## Budowanie
+Po uruchomieniu otwórz adres wyświetlony przez Vite (domyślnie `http://localhost:5173`).
+
+## Wersja produkcyjna
 
 ```bash
 npm run build
 npm run preview
 ```
 
-Gotowe pliki statyczne są zapisywane w katalogu `dist`.
+Polecenie `npm run build` zapisuje gotowe pliki w katalogu `dist`. Można je wdrożyć na dowolnym hostingu plików statycznych.
 
 ## Technologie
 
-React, Vite i Lucide React.
+- React,
+- Vite,
+- Lucide React,
+- CSS.
