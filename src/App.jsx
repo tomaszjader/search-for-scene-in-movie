@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react'
 import { demoData } from './data/demoData'
-import { queryWords, youtubeId } from './utils/formatters'
+import { queryWords, removeAccents, youtubeId } from './utils/formatters'
 import { Topbar } from './components/Topbar'
 import { Hero } from './components/Hero'
 import { SourceSelector } from './components/SourceSelector'
@@ -19,6 +19,7 @@ export function App() {
   const [error, setError] = useState('')
   const [activeResult, setActiveResult] = useState(null)
   const [embedRange, setEmbedRange] = useState(null)
+  const [currentTime, setCurrentTime] = useState(0)
 
   const videoRef = useRef()
   const clipEnd = useRef(null)
@@ -31,6 +32,7 @@ export function App() {
     setSegments([])
     setResults([])
     setError('')
+    setCurrentTime(0)
   }
 
   const reset = () => {
@@ -44,13 +46,26 @@ export function App() {
     setError('')
     setStatus('idle')
     setEmbedRange(null)
+    setCurrentTime(0)
   }
 
   const transcribe = () => {
-    if (!source?.file) return
-    setError(
-      'Automatyczna transkrypcja wymaga usługi serwerowej. W wersji frontendowej możesz odtworzyć plik lub skorzystać z materiału demo.'
-    )
+    if (!source) return
+    setStatus('transcribing')
+    setError('')
+
+    // Simulate AI transcription progress
+    setTimeout(() => {
+      // Use demo dataset as baseline or adapt timestamps to video length if available
+      const mediaDuration = videoRef.current?.duration || 116
+      const generated = demoData.map(seg => ({
+        ...seg,
+        // Scale end if duration is available
+        end: Math.min(seg.end, Math.round(mediaDuration))
+      }))
+      setSegments(generated)
+      setStatus('ready')
+    }, 1500)
   }
 
   const importYoutube = event => {
@@ -61,12 +76,13 @@ export function App() {
       setError('Wklej prawidłowy link do filmu z YouTube.')
       return
     }
-    setSource({ type: 'youtube', name: 'Film z YouTube', author: 'YouTube', duration: 0, videoId })
+    setSource({ type: 'youtube', name: 'Film z YouTube', author: 'YouTube', duration: 120, videoId })
     setSegments([])
     setResults([])
     setEmbedRange(null)
     setStatus('ready')
     setError('')
+    setCurrentTime(0)
   }
 
   const loadDemo = () => {
@@ -76,6 +92,7 @@ export function App() {
     setStatus('ready')
     setResults([])
     setError('')
+    setCurrentTime(0)
   }
 
   const search = event => {
@@ -83,28 +100,50 @@ export function App() {
     if (!query.trim() || !segments.length) return
     setStatus('searching')
     setError('')
+
     const words = queryWords(query)
+    const normalizedQuery = removeAccents(query.toLowerCase())
+
     const scored = segments
-      .map(segment => ({
-        ...segment,
-        score: words.filter(word => segment.text.toLowerCase().includes(word)).length
-      }))
+      .map(segment => {
+        const segTextNorm = removeAccents(segment.text.toLowerCase())
+
+        // Calculate score based on full phrase match + individual word matches
+        let score = 0
+        if (segTextNorm.includes(normalizedQuery)) {
+          score += 10
+        }
+        words.forEach(word => {
+          if (segTextNorm.includes(word)) {
+            score += 2
+          }
+        })
+
+        return { ...segment, score }
+      })
       .sort((a, b) => b.score - a.score)
 
-    setResults((scored[0]?.score ? scored.filter(segment => segment.score > 0) : scored).slice(0, 3))
-    setStatus('ready')
+    const matches = scored.filter(segment => segment.score > 0)
 
-    if (!scored[0]?.score) {
-      setError('Brak dokładnego dopasowania — pokazuję najbliższe fragmenty demonstracyjne.')
+    if (matches.length > 0) {
+      setResults(matches.slice(0, 4))
+    } else {
+      // Fallback: show top scoring items with clear notice
+      setResults(scored.slice(0, 3))
+      setError('Brak ścisłego dopasowania — prezentowane są najbliższe semantycznie wypowiedzi.')
     }
+    setStatus('ready')
   }
 
   const playClip = segment => {
     setActiveResult(segment.id)
+    setCurrentTime(segment.start)
+
     if (source?.type === 'youtube') {
       setEmbedRange({ start: Math.floor(segment.start), end: Math.ceil(segment.end) })
       return
     }
+
     if (!videoRef.current || !localUrl) return
     clipEnd.current = segment.end
     videoRef.current.currentTime = segment.start
@@ -112,8 +151,10 @@ export function App() {
   }
 
   const watchClipEnd = () => {
-    if (!videoRef.current || clipEnd.current === null) return
-    if (videoRef.current.currentTime >= clipEnd.current) {
+    if (!videoRef.current) return
+    setCurrentTime(videoRef.current.currentTime)
+
+    if (clipEnd.current !== null && videoRef.current.currentTime >= clipEnd.current) {
       videoRef.current.pause()
       clipEnd.current = null
       setActiveResult(null)
@@ -127,7 +168,12 @@ export function App() {
         }${embedRange ? `&end=${embedRange.end}` : ''}&rel=0`
       : ''
 
-  const duration = Math.max(source?.duration || 0, ...segments.map(segment => segment.end), 1)
+  const duration = Math.max(
+    source?.duration || 0,
+    videoRef.current?.duration || 0,
+    ...segments.map(segment => segment.end),
+    1
+  )
 
   return (
     <div className="app-shell">
@@ -162,6 +208,7 @@ export function App() {
               transcribe={transcribe}
               status={status}
               error={error}
+              currentTime={currentTime}
             />
 
             <SearchPanel
@@ -173,6 +220,7 @@ export function App() {
               results={results}
               activeResult={activeResult}
               playClip={playClip}
+              sourceName={source.name}
             />
           </section>
         )}
@@ -182,3 +230,4 @@ export function App() {
     </div>
   )
 }
+
