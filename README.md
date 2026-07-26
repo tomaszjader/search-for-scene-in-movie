@@ -1,51 +1,53 @@
 # FrameFinder
 
-FrameFinder to frontendowa aplikacja do wyszukiwania konkretnych momentów w nagraniach. Została zbudowana w React i Vite i działa w całości w przeglądarce.
+[🇵🇱 Wersja polska](README.pl.md) | **🇬🇧 English**
 
-## Funkcje
+FrameFinder is a frontend web application for searching specific moments within video and audio recordings. Built with React and Vite, it runs entirely in your browser.
 
-- otwieranie filmów z YouTube na podstawie linku,
-- lokalne odtwarzanie plików audio i wideo,
-- przeciąganie plików metodą „przeciągnij i upuść”,
-- materiał demonstracyjny z przykładową transkrypcją,
-- wyszukiwanie tekstowe w transkrypcji demo,
-- wyświetlanie dopasowanych fragmentów z timestampami,
-- przechodzenie do wybranego momentu nagrania.
+## Features
 
-## Ograniczenia wersji demonstracyjnej
+- Open YouTube videos via link
+- Local playback of audio and video files
+- Drag-and-drop file upload support
+- Demo mode with sample transcriptions
+- Full-text search within transcriptions
+- Highlighted matching segments with interactive timestamps
+- Instant seek/jump to any selected moment in the recording
 
-Automatyczna transkrypcja przesłanych plików oraz semantyczne wyszukiwanie w filmach z YouTube nie są obecnie dostępne. Te funkcje wymagają usługi backendowej — bezpośrednie wywoływanie zewnętrznego API z przeglądarki ujawniłoby klucz API użytkownikom aplikacji.
+## Demo Limitations
 
-Pełny przepływ wyszukiwania można przetestować, wybierając **Demo** na ekranie startowym. Dodane pliki pozostają lokalnie w przeglądarce i nie są wysyłane na serwer.
+Automatic transcription of uploaded files and semantic search for YouTube videos are currently unavailable in this frontend-only build. These features require a backend proxy service — making direct calls to external AI/transcription APIs from the client browser would expose secret API keys to end users.
 
-## Wymagania
+You can test the full search interaction flow by selecting **Demo** on the home screen. Any user-added files remain stored locally in your browser and are never uploaded to a remote server.
 
-- Node.js 18 lub nowszy,
-- npm.
+## Prerequisites
 
-Node.js jest potrzebny tylko do uruchomienia środowiska deweloperskiego i zbudowania aplikacji. Gotowa wersja produkcyjna składa się ze statycznych plików.
+- Node.js 18 or higher
+- npm
 
-## Uruchomienie lokalne
+Node.js is only required for local development and building the application. The production output consists purely of static files.
+
+## Local Setup
 
 ```bash
 npm install
 npm run dev
 ```
 
-Po uruchomieniu otwórz adres wyświetlony przez Vite (domyślnie `http://localhost:5173`).
+Once started, open the local URL shown by Vite (default: `http://localhost:5173`).
 
-## Wersja produkcyjna
+## Production Build
 
 ```bash
 npm run build
 npm run preview
 ```
 
-Polecenie `npm run build` zapisuje gotowe pliki w katalogu `dist`. Można je wdrożyć na dowolnym hostingu plików statycznych.
+Running `npm run build` generates optimized static assets inside the `dist` directory, ready to be deployed to any static host (e.g. GitHub Pages, Vercel, Netlify).
 
-## Technologie
+## Tech Stack
 
-- React,
-- Vite,
-- Lucide React,
-- CSS.
+- React
+- Vite
+- Lucide React
+- Vanilla CSS
