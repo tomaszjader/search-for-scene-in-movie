@@ -51,3 +51,8 @@ Polecenie `npm run build` zapisuje zoptymalizowane pliki produkcyjne w katalogu 
 - Vite
 - Lucide React
 - Vanilla CSS
+
+## Licencja
+
+Projekt jest udostępniany na licencji [MIT](LICENSE).
+

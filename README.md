@@ -51,3 +51,8 @@ Running `npm run build` generates optimized static assets inside the `dist` dire
 - Vite
 - Lucide React
 - Vanilla CSS
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
