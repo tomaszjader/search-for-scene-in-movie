@@ -14,6 +14,7 @@
 .export-link:hover{border-color:var(--acid);color:var(--acid)}
 .clear-btn{background:none!important;border:0!important;color:#686d75!important;padding:0 8px!important;cursor:pointer}
 .clear-btn:hover{color:#fff!important}
+.demo-notice{margin:-4px 12px 12px;color:#858a92;font-size:9px;line-height:1.5;text-align:center}
 .result-meta-right{display:flex;align-items:center;gap:8px}
 .copy-btn{display:inline-flex;align-items:center;justify-content:center;color:#6c727a;cursor:pointer;padding:2px;transition:.15s}
 .copy-btn:hover{color:var(--acid)}

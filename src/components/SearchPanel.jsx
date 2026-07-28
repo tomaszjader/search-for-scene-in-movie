@@ -82,7 +82,14 @@ export function SearchPanel({
       <div className="suggestions">
         <span>Podpowiedzi</span>
         {suggestions.map(item => (
-          <button key={item} onClick={() => { setQuery(item); search?.() }}>
+          <button
+            type="button"
+            key={item}
+            onClick={() => {
+              setQuery(item)
+              search(item)
+            }}
+          >
             {item}
           </button>
         ))}
@@ -127,7 +134,7 @@ export function SearchPanel({
                         <Clock3 size={12} /> {fmt(result.start)} — {fmt(result.end)}
                       </span>
                       <div className="result-meta-right">
-                        <b>{activeResult === result.id ? 'PLAYING' : `${Math.max(78, 96 - index * 7)}% MATCH`}</b>
+                        <b>{activeResult === result.id ? 'PLAYING' : `${result.matchPercent}% MATCH`}</b>
                         <span
                           className="copy-btn"
                           onClick={e => copyQuote(result, e)}
@@ -153,4 +160,3 @@ export function SearchPanel({
     </section>
   )
 }
-

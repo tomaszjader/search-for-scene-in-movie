@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { demoData } from './data/demoData'
 import { queryWords, removeAccents, youtubeId } from './utils/formatters'
 import { Topbar } from './components/Topbar'
@@ -20,12 +20,46 @@ export function App() {
   const [activeResult, setActiveResult] = useState(null)
   const [embedRange, setEmbedRange] = useState(null)
   const [currentTime, setCurrentTime] = useState(0)
+  const [mediaDuration, setMediaDuration] = useState(0)
 
   const videoRef = useRef()
   const clipEnd = useRef(null)
+  const transcriptionTimer = useRef(null)
+
+  useEffect(
+    () => () => {
+      if (transcriptionTimer.current) clearTimeout(transcriptionTimer.current)
+      if (localUrl) URL.revokeObjectURL(localUrl)
+    },
+    [localUrl]
+  )
 
   const choose = file => {
     if (!file) return
+
+    const supportedTypes = new Set([
+      'video/mp4',
+      'video/webm',
+      'audio/mpeg',
+      'audio/wav',
+      'audio/x-wav',
+      'audio/webm'
+    ])
+    const maxFileSize = 200 * 1024 * 1024
+
+    if (!supportedTypes.has(file.type)) {
+      setError('Nieobsługiwany format. Wybierz plik MP4, WEBM, MP3 lub WAV.')
+      return
+    }
+    if (file.size > maxFileSize) {
+      setError('Plik jest za duży. Maksymalny rozmiar to 200 MB.')
+      return
+    }
+    if (file.size === 0) {
+      setError('Wybrany plik jest pusty.')
+      return
+    }
+
     if (localUrl) URL.revokeObjectURL(localUrl)
     setSource({ type: 'file', name: file.name, size: file.size, file })
     setLocalUrl(URL.createObjectURL(file))
@@ -33,9 +67,15 @@ export function App() {
     setResults([])
     setError('')
     setCurrentTime(0)
+    setMediaDuration(0)
+    setStatus('idle')
   }
 
   const reset = () => {
+    if (transcriptionTimer.current) {
+      clearTimeout(transcriptionTimer.current)
+      transcriptionTimer.current = null
+    }
     if (localUrl) URL.revokeObjectURL(localUrl)
     setSource(null)
     setLocalUrl('')
@@ -47,6 +87,7 @@ export function App() {
     setStatus('idle')
     setEmbedRange(null)
     setCurrentTime(0)
+    setMediaDuration(0)
   }
 
   const transcribe = () => {
@@ -54,17 +95,17 @@ export function App() {
     setStatus('transcribing')
     setError('')
 
-    // Simulate AI transcription progress
-    setTimeout(() => {
-      // Use demo dataset as baseline or adapt timestamps to video length if available
-      const mediaDuration = videoRef.current?.duration || 116
-      const generated = demoData.map(seg => ({
-        ...seg,
-        // Scale end if duration is available
-        end: Math.min(seg.end, Math.round(mediaDuration))
-      }))
+    transcriptionTimer.current = setTimeout(() => {
+      const durationLimit = mediaDuration || source.duration || 116
+      const generated = demoData
+        .filter(segment => segment.start < durationLimit)
+        .map(segment => ({
+          ...segment,
+          end: Math.min(segment.end, durationLimit)
+        }))
       setSegments(generated)
       setStatus('ready')
+      transcriptionTimer.current = null
     }, 1500)
   }
 
@@ -83,6 +124,7 @@ export function App() {
     setStatus('ready')
     setError('')
     setCurrentTime(0)
+    setMediaDuration(120)
   }
 
   const loadDemo = () => {
@@ -93,16 +135,18 @@ export function App() {
     setResults([])
     setError('')
     setCurrentTime(0)
+    setMediaDuration(116)
   }
 
-  const search = event => {
-    event?.preventDefault()
-    if (!query.trim() || !segments.length) return
+  const search = eventOrQuery => {
+    if (typeof eventOrQuery !== 'string') eventOrQuery?.preventDefault()
+    const searchQuery = typeof eventOrQuery === 'string' ? eventOrQuery : query
+    if (!searchQuery.trim() || !segments.length) return
     setStatus('searching')
     setError('')
 
-    const words = queryWords(query)
-    const normalizedQuery = removeAccents(query.toLowerCase())
+    const words = [...new Set(queryWords(searchQuery))]
+    const normalizedQuery = removeAccents(searchQuery.toLowerCase()).trim()
 
     const scored = segments
       .map(segment => {
@@ -119,7 +163,12 @@ export function App() {
           }
         })
 
-        return { ...segment, score }
+        const maxScore = 10 + words.length * 2
+        return {
+          ...segment,
+          score,
+          matchPercent: Math.round((score / maxScore) * 100)
+        }
       })
       .sort((a, b) => b.score - a.score)
 
@@ -128,9 +177,8 @@ export function App() {
     if (matches.length > 0) {
       setResults(matches.slice(0, 4))
     } else {
-      // Fallback: show top scoring items with clear notice
-      setResults(scored.slice(0, 3))
-      setError('Brak ścisłego dopasowania — prezentowane są najbliższe semantycznie wypowiedzi.')
+      setResults([])
+      setError('Nie znaleziono fragmentów zawierających podane słowa.')
     }
     setStatus('ready')
   }
@@ -170,7 +218,7 @@ export function App() {
 
   const duration = Math.max(
     source?.duration || 0,
-    videoRef.current?.duration || 0,
+    mediaDuration,
     ...segments.map(segment => segment.end),
     1
   )
@@ -199,6 +247,10 @@ export function App() {
               localUrl={localUrl}
               videoRef={videoRef}
               watchClipEnd={watchClipEnd}
+              onLoadedMetadata={() => {
+                const loadedDuration = videoRef.current?.duration
+                if (Number.isFinite(loadedDuration)) setMediaDuration(loadedDuration)
+              }}
               embedUrl={embedUrl}
               segments={segments}
               results={results}
@@ -230,4 +282,3 @@ export function App() {
     </div>
   )
 }
-

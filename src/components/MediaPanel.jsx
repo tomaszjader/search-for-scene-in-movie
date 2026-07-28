@@ -9,6 +9,7 @@ export function MediaPanel({
   localUrl,
   videoRef,
   watchClipEnd,
+  onLoadedMetadata,
   embedUrl,
   segments,
   results,
@@ -50,7 +51,13 @@ export function MediaPanel({
             allowFullScreen
           />
         ) : localUrl ? (
-          <video ref={videoRef} src={localUrl} controls onTimeUpdate={watchClipEnd} />
+          <video
+            ref={videoRef}
+            src={localUrl}
+            controls
+            onLoadedMetadata={onLoadedMetadata}
+            onTimeUpdate={watchClipEnd}
+          />
         ) : (
           <div className="demo-view">
             <span className="demo-play">
@@ -121,14 +128,18 @@ export function MediaPanel({
           )}
         </>
       ) : (
-        <button className="primary-action" onClick={transcribe} disabled={status === 'transcribing'}>
-          {status === 'transcribing' ? <LoaderCircle className="spin" size={17} /> : <Captions size={17} />}
-          {status === 'transcribing' ? 'Analizuję nagranie (transkrypcja AI)...' : 'Utwórz transkrypcję nagrania'}
-        </button>
+        <>
+          <button className="primary-action" onClick={transcribe} disabled={status === 'transcribing'}>
+            {status === 'transcribing' ? <LoaderCircle className="spin" size={17} /> : <Captions size={17} />}
+            {status === 'transcribing' ? 'Uruchamiam transkrypcję demonstracyjną...' : 'Uruchom demonstrację transkrypcji'}
+          </button>
+          <p className="demo-notice">
+            To symulacja interfejsu — aplikacja użyje przykładowego tekstu, a nie treści tego nagrania.
+          </p>
+        </>
       )}
 
       {error && <div className="error">{error}</div>}
     </aside>
   )
 }
-
