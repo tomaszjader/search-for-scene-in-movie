@@ -45,6 +45,21 @@ npm run preview
 
 Polecenie `npm run build` zapisuje zoptymalizowane pliki produkcyjne w katalogu `dist`. Można je wdrożyć na dowolnym hostingu plików statycznych (np. GitHub Pages, Vercel, Netlify).
 
+## Aplikacja desktopowa (Electron)
+
+```bash
+# Tryb deweloperski
+npm run desktop:dev
+
+# Lokalny build produkcyjny
+npm run desktop:start
+
+# Instalator i wersja przenośna dla Windows
+npm run desktop:pack:win
+```
+
+Gotowe pliki są zapisywane w katalogu `release`.
+
 ## Technologie
 
 - React
@@ -55,4 +70,3 @@ Polecenie `npm run build` zapisuje zoptymalizowane pliki produkcyjne w katalogu 
 ## Licencja
 
 Projekt jest udostępniany na licencji [MIT](LICENSE).
-

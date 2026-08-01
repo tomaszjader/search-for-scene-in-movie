@@ -45,6 +45,21 @@ npm run preview
 
 Running `npm run build` generates optimized static assets inside the `dist` directory, ready to be deployed to any static host (e.g. GitHub Pages, Vercel, Netlify).
 
+## Desktop App (Electron)
+
+```bash
+# Development mode
+npm run desktop:dev
+
+# Run the production build locally
+npm run desktop:start
+
+# Build the Windows installer and portable app
+npm run desktop:pack:win
+```
+
+Packaged files are written to the `release` directory.
+
 ## Tech Stack
 
 - React
@@ -55,4 +70,3 @@ Running `npm run build` generates optimized static assets inside the `dist` dire
 ## License
 
 This project is licensed under the [MIT License](LICENSE).
-

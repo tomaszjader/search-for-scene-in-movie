@@ -3,6 +3,7 @@ node_modules/
 
 # Production build
 dist/
+release/
 
 # Local environment variables and API keys
 .env
