@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react'
-import { Check, Clock3, Command, Copy, CornerDownLeft, Download, LoaderCircle, Play, Search, X } from 'lucide-react'
+import { Check, Clock3, Command, Copy, CornerDownLeft, Download, LoaderCircle, Play, Quote, Search, Sparkles, X } from 'lucide-react'
 import { exportToSRT, fmt } from '../utils/formatters'
 import { HighlightedText } from './HighlightedText'
 
@@ -10,6 +10,8 @@ export function SearchPanel({
   segments,
   status,
   results,
+  aiAnswer,
+  exactQuote,
   activeResult,
   playClip,
   sourceName = 'film'
@@ -18,9 +20,9 @@ export function SearchPanel({
   const [copiedId, setCopiedId] = useState(null)
 
   const suggestions = [
-    'Co było najtrudniejsze?',
-    'Jaki jest główny wniosek?',
-    'Jakie są plany?'
+    'Czy Piastowie byli nordami?',
+    'Co badacz mówi o genetyce Słowian?',
+    'Jaki jest główny wniosek?'
   ]
 
   useEffect(() => {
@@ -47,8 +49,8 @@ export function SearchPanel({
       <div className="panel-heading search-heading">
         <span className="panel-index">02</span>
         <div>
-          <strong>Znajdź moment</strong>
-          <small>Opisz scenę, wypowiedź lub emocję</small>
+          <strong>Znajdź moment & Odpowiedź AI</strong>
+          <small>Agent AI przeczyta nagranie i odpowie na Twoje pytanie</small>
         </div>
         <div className="key" onClick={() => inputRef.current?.focus()} style={{ cursor: 'pointer' }} title="Naciśnij Ctrl+K lub Cmd+K">
           <Command size={11} /> K
@@ -62,7 +64,7 @@ export function SearchPanel({
           value={query}
           onChange={event => setQuery(event.target.value)}
           disabled={!segments.length}
-          placeholder="Gdzie rozmówca mówi o zmianie produktu?"
+          placeholder="np. Czy Piastowie pochodzili ze Skandynawii?"
         />
         {query && (
           <button
@@ -96,18 +98,50 @@ export function SearchPanel({
       </div>
 
       <div className="results-area">
+        {aiAnswer && (
+          <div className="ai-agent-card">
+            <div className="ai-agent-header">
+              <span className="ai-badge">
+                <Sparkles size={13} /> ASYSTENT AI FILMU (RAG)
+              </span>
+              {results[0] && (
+                <button
+                  type="button"
+                  className="jump-moment-btn"
+                  onClick={() => playClip(results[0])}
+                >
+                  <Play size={11} fill="currentColor" /> Skocz do sekundy ({fmt(results[0].start)})
+                </button>
+              )}
+            </div>
+            <div className="ai-agent-body">
+              <strong>Odpowiedź na podstawie nagrania:</strong>
+              <p>{aiAnswer}</p>
+
+              {exactQuote && (
+                <div className="ai-exact-quote">
+                  <Quote size={12} />
+                  <span>
+                    <strong>Cytat z nagrania:</strong> „{exactQuote}”
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {!results.length ? (
           <div className="empty-state">
             <div className="empty-glyph">
               <Search size={20} />
             </div>
             <strong>{segments.length ? 'Materiał czeka na pytanie' : 'Najpierw przeanalizuj nagranie'}</strong>
-            <p>Każdy wynik otrzyma dokładny timestamp i cytat z transkrypcji.</p>
+            <p>Wpisz pytanie w języku naturalnym — Agent AI znajdzie moment i odpowie na pytanie w oparciu o cytaty.</p>
           </div>
         ) : (
           <>
             <div className="results-header">
-              <span>Najlepsze dopasowania</span>
+              <span>Powiązane fragmenty wideo</span>
               <div className="results-actions">
                 <button
                   type="button"
@@ -134,7 +168,7 @@ export function SearchPanel({
                         <Clock3 size={12} /> {fmt(result.start)} — {fmt(result.end)}
                       </span>
                       <div className="result-meta-right">
-                        <b>{activeResult === result.id ? 'PLAYING' : `${result.matchPercent}% MATCH`}</b>
+                        <b>{activeResult === result.id ? 'PLAYING' : `${result.matchPercent || 95}% MATCH`}</b>
                         <span
                           className="copy-btn"
                           onClick={e => copyQuote(result, e)}

@@ -1,71 +1,75 @@
 # FrameFinder
 
-**🇵🇱 Polski** | [🇬🇧 English version](README.md)
+**Polski** | [English](README.md)
 
-FrameFinder to frontendowa aplikacja internetowa do wyszukiwania konkretnych momentów w nagraniach wideo i audio. Została zbudowana w React i Vite i działa w całości w przeglądarce.
+FrameFinder to aplikacja desktopowa Electron do tworzenia pełnych transkrypcji filmów i wyszukiwania konkretnych wypowiedzi oraz momentów nagrania.
 
 ## Funkcje
 
-- Otwieranie filmów z YouTube na podstawie linku
-- Lokalne odtwarzanie plików audio i wideo
-- Obsługa wgrywania plików metodą „przeciągnij i upuść” (drag and drop)
-- Tryb demonstracyjny z przykładową transkrypcją
-- Wyszukiwanie tekstowe w transkrypcji demo
-- Wyświetlanie dopasowanych fragmentów wraz z interaktywnymi znacznikami czasu (timestampami)
-- Natychmiastowe przechodzenie do wybranego momentu nagrania
+- pobieranie ścieżki audio z filmu YouTube w wersji Electron,
+- pełna transkrypcja przez OpenAI Whisper albo Groq Whisper,
+- transkrypcja lokalna Whisper bez klucza API i bez wysyłania audio,
+- automatyczny podział długich nagrań na części,
+- obsługa lokalnych plików MP4, WEBM, MP3 i WAV,
+- import i eksport napisów SRT,
+- wyszukiwanie tekstowe i semantyczne,
+- interaktywne timestampy prowadzące do fragmentu filmu.
 
-## Ograniczenia wersji demonstracyjnej
+Używaj wyłącznie nagrań, do których masz odpowiednie prawa lub zgodę na przetwarzanie.
 
-Automatyczna transkrypcja przesłanych plików oraz semantyczne wyszukiwanie w filmach z YouTube nie są obecnie dostępne w wersji klienckiej. Te funkcje wymagają usługi backendowej — bezpośrednie wywoływanie zewnętrznych API transkrypcyjnych z przeglądarki ujawniłoby klucze API użytkownikom aplikacji.
+## Wymagania do samodzielnego zbudowania
 
-Pełny przepływ wyszukiwania można przetestować, wybierając **Demo** na ekranie startowym. Dodane pliki lokalne pozostają w przeglądarce i nie są wysyłane na żaden zewnętrzny serwer.
+- Windows 10 lub Windows 11,
+- Node.js 18 lub nowszy,
+- npm,
+- połączenie z internetem podczas pierwszego `npm install`.
 
-## Wymagania
+`ffmpeg` i `yt-dlp` są pobierane jako zależności projektu i dołączane do gotowej aplikacji. Użytkownik zbudowanego programu nie musi instalować ich osobno.
 
-- Node.js 18 lub nowszy
-- npm
+## Budowanie aplikacji krok po kroku
 
-Node.js jest potrzebny tylko do uruchomienia środowiska deweloperskiego i zbudowania aplikacji. Gotowa wersja produkcyjna składa się wyłącznie ze statycznych plików.
+Otwórz PowerShell w katalogu projektu i wykonaj:
 
-## Uruchomienie lokalne
-
-```bash
+```powershell
 npm install
-npm run dev
-```
-
-Po uruchomieniu otwórz adres wyświetlony przez Vite (domyślnie `http://localhost:5173`).
-
-## Wersja produkcyjna
-
-```bash
-npm run build
-npm run preview
-```
-
-Polecenie `npm run build` zapisuje zoptymalizowane pliki produkcyjne w katalogu `dist`. Można je wdrożyć na dowolnym hostingu plików statycznych (np. GitHub Pages, Vercel, Netlify).
-
-## Aplikacja desktopowa (Electron)
-
-```bash
-# Tryb deweloperski
-npm run desktop:dev
-
-# Lokalny build produkcyjny
-npm run desktop:start
-
-# Instalator i wersja przenośna dla Windows
 npm run desktop:pack:win
 ```
 
-Gotowe pliki są zapisywane w katalogu `release`.
+Gotowe pliki pojawią się w katalogu `release`:
+
+- `FrameFinder Setup 1.0.0.exe` — instalator Windows,
+- `FrameFinder 1.0.0.exe` — wersja przenośna,
+- `win-unpacked/FrameFinder.exe` — rozpakowana wersja testowa.
+
+## Uruchomienie podczas tworzenia programu
+
+```powershell
+npm install
+npm run desktop:dev
+```
+
+Tryb ten uruchamia Vite i okno Electron z automatycznym odświeżaniem zmian.
+
+## Test wersji produkcyjnej bez instalatora
+
+```powershell
+npm run desktop:start
+```
+
+## Klucz API
+
+Po uruchomieniu aplikacji otwórz ustawienia i dodaj własny klucz OpenAI albo Groq. Klucz jest zapisywany lokalnie na urządzeniu użytkownika. Transkrypcja powoduje naliczenie opłat lub wykorzystanie limitu zgodnie z zasadami wybranego dostawcy.
+
+Możesz również wybrać opcję **Lokalnie — Whisper Small**. Przy pierwszej transkrypcji aplikacja pobierze model do pamięci urządzenia. Kolejne transkrypcje mogą działać bez klucza API; szybkość zależy od procesora komputera.
 
 ## Technologie
 
+- Electron
 - React
 - Vite
-- Lucide React
-- Vanilla CSS
+- `yt-dlp`
+- `ffmpeg`
+- OpenAI Whisper / Groq Whisper
 
 ## Licencja
 

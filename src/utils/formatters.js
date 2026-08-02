@@ -1,5 +1,13 @@
-export const fmt = value =>
-  `${String(Math.floor((value || 0) / 60)).padStart(2, '0')}:${String(Math.floor((value || 0) % 60)).padStart(2, '0')}`
+export const fmt = value => {
+  const total = Math.floor(value || 0)
+  const hrs = Math.floor(total / 3600)
+  const mins = Math.floor((total % 3600) / 60)
+  const secs = total % 60
+  if (hrs > 0) {
+    return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+  }
+  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+}
 
 export const removeAccents = str =>
   str ? str.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : ''
@@ -43,3 +51,44 @@ export const exportToSRT = (segments, title = 'transkrypcja') => {
   URL.revokeObjectURL(url)
 }
 
+export const parseSRT = srtContent => {
+  const normalized = srtContent.replace(/\r\n/g, '\n').replace(/\r/g, '\n')
+  const blocks = normalized.split(/\n\n+/)
+  const segments = []
+
+  blocks.forEach((block, idx) => {
+    const lines = block.trim().split('\n')
+    const timeLineIndex = lines.findIndex(l => l.includes('-->'))
+    if (timeLineIndex !== -1) {
+      const timeParts = lines[timeLineIndex].split('-->')
+      const startStr = timeParts[0].trim()
+      const endStr = timeParts[1].trim()
+
+      const parseTime = str => {
+        const parts = str.replace(',', '.').split(':')
+        if (parts.length === 3) {
+          return parseFloat(parts[0]) * 3600 + parseFloat(parts[1]) * 60 + parseFloat(parts[2])
+        }
+        if (parts.length === 2) {
+          return parseFloat(parts[0]) * 60 + parseFloat(parts[1])
+        }
+        return 0
+      }
+
+      const start = parseTime(startStr)
+      const end = parseTime(endStr)
+      const text = lines.slice(timeLineIndex + 1).join(' ').trim()
+
+      if (text) {
+        segments.push({
+          id: `srt-${idx}`,
+          start: Math.round(start * 10) / 10,
+          end: Math.round(end * 10) / 10,
+          text
+        })
+      }
+    }
+  })
+
+  return segments
+}
