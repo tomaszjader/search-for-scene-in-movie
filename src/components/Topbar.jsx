@@ -1,7 +1,9 @@
 import React from 'react'
 import { ArrowUpRight, Key, Play } from 'lucide-react'
+import { useI18n } from '../i18n'
 
 export function Topbar({ apiKey, apiProvider, onOpenApiModal }) {
+  const { language, setLanguage, t } = useI18n()
   const providerName =
     apiProvider === 'local' ? 'Lokalny Whisper' : apiProvider === 'gemini' ? 'Gemini' : apiProvider === 'groq' ? 'Groq' : 'OpenAI'
 
@@ -14,7 +16,7 @@ export function Topbar({ apiKey, apiProvider, onOpenApiModal }) {
         <span>framefinder</span>
       </a>
       <div className="top-status">
-        <i /> Aplikacja desktopowa <span>v2.0</span>
+        <i /> {t('desktopApp')} <span>v2.0</span>
       </div>
 
       <div className="topbar-actions">
@@ -22,13 +24,17 @@ export function Topbar({ apiKey, apiProvider, onOpenApiModal }) {
           type="button"
           className={`api-status-badge ${apiKey || apiProvider === 'local' ? 'active' : 'demo'}`}
           onClick={onOpenApiModal}
-          title="Ustawienia klucza API (BYOK)"
+          title={t('apiSettings')}
         >
           <Key size={13} />
-          <span>{apiProvider === 'local' ? providerName : apiKey ? `API: ${providerName}` : 'Brak klucza API (Demo)'}</span>
+          <span>{apiProvider === 'local' ? providerName : apiKey ? `API: ${providerName}` : t('noKey')}</span>
         </button>
+        <div className="language-switch" aria-label="Language">
+          <button className={language === 'pl' ? 'active' : ''} onClick={() => setLanguage('pl')}>PL</button>
+          <button className={language === 'en' ? 'active' : ''} onClick={() => setLanguage('en')}>EN</button>
+        </div>
         <a className="how-link" href="#workflow">
-          Jak to działa <ArrowUpRight size={14} />
+          {t('how')} <ArrowUpRight size={14} />
         </a>
       </div>
     </header>

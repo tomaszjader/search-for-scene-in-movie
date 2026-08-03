@@ -16,8 +16,11 @@ import { SearchPanel } from './components/SearchPanel'
 import { WorkflowFooter } from './components/WorkflowFooter'
 import { ApiKeyModal } from './components/ApiKeyModal'
 import { NoKeyModal } from './components/NoKeyModal'
+import { useI18n } from './i18n'
 
 export function App() {
+  const { language } = useI18n()
+  const msg = (pl, en) => language === 'pl' ? pl : en
   const [source, setSource] = useState(null)
   const [youtubeUrl, setYoutubeUrl] = useState('')
   const [localUrl, setLocalUrl] = useState('')
@@ -86,15 +89,15 @@ export function App() {
     const maxFileSize = 200 * 1024 * 1024
 
     if (!supportedTypes.has(file.type)) {
-      setError('Nieobsługiwany format. Wybierz plik MP4, WEBM, MP3 lub WAV.')
+      setError(msg('Nieobsługiwany format. Wybierz plik MP4, WEBM, MP3 lub WAV.', 'Unsupported format. Choose an MP4, WEBM, MP3, or WAV file.'))
       return
     }
     if (file.size > maxFileSize) {
-      setError('Plik jest za duży. Maksymalny rozmiar to 200 MB.')
+      setError(msg('Plik jest za duży. Maksymalny rozmiar to 200 MB.', 'The file is too large. Maximum size is 200 MB.'))
       return
     }
     if (file.size === 0) {
-      setError('Wybrany plik jest pusty.')
+      setError(msg('Wybrany plik jest pusty.', 'The selected file is empty.'))
       return
     }
 
@@ -141,7 +144,7 @@ export function App() {
 
     if (source.type === 'youtube' && window.frameFinderDesktop?.transcribeYouTube) {
       try {
-        setTranscriptionProgress('Rozpoczynam transkrypcję…')
+        setTranscriptionProgress(msg('Rozpoczynam transkrypcję…', 'Starting transcription…'))
         const result = await window.frameFinderDesktop.transcribeYouTube({
           url: `https://www.youtube.com/watch?v=${source.videoId}`,
           apiKey,
@@ -156,7 +159,7 @@ export function App() {
           return
         }
       } catch (err) {
-        setError(`Błąd transkrypcji Electron: ${err.message}`)
+        setError(`${msg('Błąd transkrypcji Electron', 'Electron transcription error')}: ${err.message}`)
         setStatus('ready')
         setTranscriptionProgress('')
         return
@@ -176,7 +179,7 @@ export function App() {
         }
       } catch (err) {
         console.warn('Whisper API error:', err)
-        setError(`Błąd Whisper API: ${err.message}`)
+        setError(`${msg('Błąd Whisper API', 'Whisper API error')}: ${err.message}`)
         setStatus('ready')
         return
       }
@@ -196,7 +199,7 @@ export function App() {
         }
       } catch (err) {
         console.warn('OpenAI API error:', err)
-        setError(`Błąd OpenAI API: ${err.message}`)
+        setError(`${msg('Błąd OpenAI API', 'OpenAI API error')}: ${err.message}`)
         setStatus('ready')
         return
       }
@@ -215,13 +218,13 @@ export function App() {
         }
       } catch (err) {
         console.warn('Gemini API error:', err)
-        setError(`Błąd Gemini API: ${err.message}`)
+        setError(`${msg('Błąd Gemini API', 'Gemini API error')}: ${err.message}`)
         setStatus('ready')
         return
       }
     }
 
-    setError('Aby wygenerować transkrypcję AI, dodaj swój klucz API w ustawieniach (⚙️ w nagłówku).')
+    setError(msg('Aby wygenerować transkrypcję AI, dodaj swój klucz API w ustawieniach.', 'Add your API key in settings to generate an AI transcript.'))
     setStatus('ready')
   }
 
@@ -230,11 +233,11 @@ export function App() {
     if (!youtubeUrl.trim()) return
     const videoId = youtubeId(youtubeUrl)
     if (!videoId || !/^[\w-]{11}$/.test(videoId)) {
-      setError('Wklej prawidłowy link do filmu z YouTube.')
+      setError(msg('Wklej prawidłowy link do filmu z YouTube.', 'Paste a valid YouTube video link.'))
       return
     }
 
-    setSource({ type: 'youtube', name: 'Film z YouTube', author: 'YouTube', videoId })
+    setSource({ type: 'youtube', name: msg('Film z YouTube', 'YouTube video'), author: 'YouTube', videoId })
     setSegments([])
     setResults([])
     setAiAnswer('')
@@ -266,8 +269,8 @@ export function App() {
       setStatus('ready')
       setError(
           apiKey || apiProvider === 'local'
-          ? 'Brak dostępnych napisów. Kliknij „Uruchom transkrypcję”, aby Electron pobrał audio i utworzył prawdziwą transkrypcję.'
-          : 'Brak dostępnych napisów. Dodaj klucz OpenAI lub Groq, a następnie uruchom transkrypcję.'
+          ? msg('Brak dostępnych napisów. Uruchom transkrypcję, aby pobrać audio.', 'No captions are available. Start transcription to download and transcribe the audio.')
+          : msg('Brak dostępnych napisów. Dodaj klucz OpenAI lub Groq, a następnie uruchom transkrypcję.', 'No captions are available. Add an OpenAI or Groq key, then start transcription.')
       )
       return
     }
@@ -307,12 +310,12 @@ export function App() {
 
     setStatus('ready')
     setError(
-      'Ten film nie posiada wbudowanych napisów na YouTube. Kliknij "Uruchom transkrypcję" lub dodaj swój klucz API w ustawieniach (⚙️ w nagłówku).'
+      msg('Ten film nie posiada wbudowanych napisów. Uruchom transkrypcję lub dodaj klucz API.', 'This video has no embedded captions. Start transcription or add your API key.')
     )
   }
 
   const loadDemo = () => {
-    setSource({ type: 'demo', name: 'Rozmowa z zespołem.mp4', size: 48200000 })
+    setSource({ type: 'demo', name: msg('Rozmowa z zespołem.mp4', 'Team conversation.mp4'), size: 48200000 })
     setLocalUrl('')
     setSegments(demoData)
     setStatus('ready')
@@ -400,7 +403,7 @@ export function App() {
       setResults(matches.slice(0, 8))
     } else {
       setResults([])
-      setError('Nie znaleziono fragmentów zawierających podane słowa. Spróbuj zmienić zapytanie.')
+      setError(msg('Nie znaleziono pasujących fragmentów. Spróbuj zmienić zapytanie.', 'No matching moments were found. Try changing your query.'))
     }
     setStatus('ready')
   }

@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Check, Eye, EyeOff, Key, LoaderCircle, ShieldCheck, Sparkles, X } from 'lucide-react'
 import { validateApiKey } from '../utils/youtubeTranscripts'
+import { useI18n } from '../i18n'
 
 export const PROVIDERS = [
   {
@@ -42,6 +43,7 @@ export function ApiKeyModal({
   onClearKey,
   onSwitchToDemo
 }) {
+  const { t, language } = useI18n()
   const [tempKey, setTempKey] = useState(apiKey || '')
   const [tempProvider, setTempProvider] = useState(apiProvider || 'openai')
   const [showKeyText, setShowKeyText] = useState(false)
@@ -95,17 +97,17 @@ export function ApiKeyModal({
               <Key size={18} />
             </span>
             <div>
-              <h3>Ustawienia Klucza API</h3>
+              <h3>{t('apiTitle')}</h3>
               <small>Bring Your Own Key (BYOK)</small>
             </div>
           </div>
-          <button className="icon-button" onClick={onClose} aria-label="Zamknij">
+          <button className="icon-button" onClick={onClose} aria-label={t('close')}>
             <X size={18} />
           </button>
         </div>
 
         <div className="modal-body">
-          <div className="provider-selector-label">Wybierz dostawcę AI / Transkrypcji:</div>
+          <div className="provider-selector-label">{t('chooseProvider')}</div>
 
           <div className="provider-grid">
             {PROVIDERS.map(p => (
@@ -119,17 +121,17 @@ export function ApiKeyModal({
                 }}
               >
                 <div className="provider-card-head">
-                  <strong>{p.name}</strong>
+                  <strong>{p.id === 'local' && language === 'en' ? 'Local' : p.name}</strong>
                   <span className="provider-model">{p.model}</span>
                 </div>
-                <p>{p.desc}</p>
+                <p>{language === 'pl' ? p.desc : ({ local: 'No key and no audio upload. The model downloads on first use.', openai: 'Transcribe audio/video and generate matching moments.', gemini: 'Native content analysis and timestamped summaries.', groq: 'Fast transcription with a free request allowance.' }[p.id])}</p>
               </button>
             ))}
           </div>
 
           <form onSubmit={handleTestAndSave} className="api-key-form">
             {tempProvider !== 'local' && <label htmlFor="api-key-input">
-              Klucz API ({PROVIDERS.find(p => p.id === tempProvider)?.name}):
+              {t('apiKey')} ({PROVIDERS.find(p => p.id === tempProvider)?.name}):
             </label>}
             {tempProvider !== 'local' && <div className="input-password-wrapper">
               <input
@@ -147,7 +149,7 @@ export function ApiKeyModal({
                 type="button"
                 className="toggle-eye"
                 onClick={() => setShowKeyText(!showKeyText)}
-                title={showKeyText ? 'Ukryj klucz' : 'Pokaż klucz'}
+                title={showKeyText ? t('hideKey') : t('showKey')}
               >
                 {showKeyText ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
@@ -163,14 +165,14 @@ export function ApiKeyModal({
             <div className="security-note">
               <ShieldCheck size={16} />
               <span>
-                Twój klucz jest zapisywany <strong>wyłącznie w Twojej przeglądarce (`localStorage`)</strong>. Nigdy nie jest przesyłany na żaden serwer pośredniczący.
+                {t('security')}
               </span>
             </div>
 
             <div className="modal-actions">
               {apiKey ? (
                 <button type="button" className="danger-btn" onClick={handleClear}>
-                  Usuń klucz
+                  {t('deleteKey')}
                 </button>
               ) : (
                 <button
@@ -181,21 +183,21 @@ export function ApiKeyModal({
                     onClose()
                   }}
                 >
-                  <Sparkles size={14} /> Używaj trybu Demo
+                  <Sparkles size={14} /> {t('useDemo')}
                 </button>
               )}
 
               <button type="submit" className="primary-action-btn" disabled={(tempProvider !== 'local' && !tempKey.trim()) || isTesting}>
                 {isTesting ? (
                   <>
-                    <LoaderCircle className="spin" size={16} /> Testuję klucz...
+                    <LoaderCircle className="spin" size={16} /> {t('testing')}
                   </>
                 ) : testResult?.success ? (
                   <>
-                    <Check size={16} /> Zapisano!
+                    <Check size={16} /> {t('saved')}
                   </>
                 ) : (
-                  tempProvider === 'local' ? 'Wybierz transkrypcję lokalną' : 'Testuj i zapisz klucz API'
+                  tempProvider === 'local' ? t('chooseLocal') : t('testSave')
                 )}
               </button>
             </div>

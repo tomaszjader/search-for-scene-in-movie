@@ -1,30 +1,29 @@
 import React from 'react'
+import { useI18n } from '../i18n'
 
 export function WorkflowFooter() {
+  const { t } = useI18n()
   return (
     <>
       <section className="workflow" id="workflow">
-        <span className="workflow-label">Jak to działa</span>
+        <span className="workflow-label">{t('how')}</span>
         <div className="workflow-items">
           <div>
             <b>01</b>
             <span>
-              <strong>Dodaj link lub plik</strong>
-              <small>YouTube, wideo lub audio</small>
+              <strong>{t('workflow1')}</strong><small>{t('workflow1s')}</small>
             </span>
           </div>
           <div>
             <b>02</b>
             <span>
-              <strong>Zadaj pytanie</strong>
-              <small>Własnymi słowami</small>
+              <strong>{t('workflow2')}</strong><small>{t('workflow2s')}</small>
             </span>
           </div>
           <div>
             <b>03</b>
             <span>
-              <strong>Odtwórz scenę</strong>
-              <small>Od właściwej sekundy</small>
+              <strong>{t('workflow3')}</strong><small>{t('workflow3s')}</small>
             </span>
           </div>
         </div>
@@ -32,7 +31,7 @@ export function WorkflowFooter() {
 
       <footer>
         <span>© 2026 FRAMEFINDER</span>
-        <p>Prywatne nagrania. Precyzyjne odpowiedzi.</p>
+        <p>{t('privacy')}</p>
         <span>PL / EN</span>
       </footer>
     </>

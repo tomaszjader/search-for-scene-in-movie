@@ -1,5 +1,6 @@
 import React, { useRef } from 'react'
 import { Link2, LoaderCircle, Play, Upload } from 'lucide-react'
+import { useI18n } from '../i18n'
 
 export function SourceSelector({
   youtubeUrl,
@@ -10,6 +11,7 @@ export function SourceSelector({
   status,
   error
 }) {
+  const { t } = useI18n()
   const inputRef = useRef()
 
   return (
@@ -19,9 +21,7 @@ export function SourceSelector({
           <Play size={25} fill="currentColor" />
         </div>
         <div className="youtube-copy">
-          <span className="step-label">01 / LINK YOUTUBE</span>
-          <strong>Wklej link do filmu</strong>
-          <small>Odtwarzanie bezpośrednio z YouTube</small>
+          <span className="step-label">{t('youtubeLink')}</span><strong>{t('pasteLink')}</strong><small>{t('directYoutube')}</small>
         </div>
         <div className="url-field">
           <Link2 size={17} />
@@ -32,13 +32,13 @@ export function SourceSelector({
             placeholder="https://youtube.com/watch?v=..."
           />
           <button disabled={!youtubeUrl.trim() || status === 'importing'}>
-            {status === 'importing' ? <LoaderCircle className="spin" size={17} /> : 'Otwórz'}
+            {status === 'importing' ? <LoaderCircle className="spin" size={17} /> : t('open')}
           </button>
         </div>
       </form>
 
       <div className="source-divider">
-        <span>albo</span>
+        <span>{t('or')}</span>
       </div>
 
       <div
@@ -61,9 +61,7 @@ export function SourceSelector({
           <Upload size={23} />
         </div>
         <div>
-          <span className="step-label">PLIK Z DYSKU</span>
-          <h2>Upuść nagranie lub wybierz plik</h2>
-          <p>MP4, WEBM, MP3, WAV · maks. 200 MB</p>
+          <span className="step-label">{t('diskFile')}</span><h2>{t('drop')}</h2><p>{t('maxFile')}</p>
         </div>
         <button
           className="text-action"
@@ -72,7 +70,7 @@ export function SourceSelector({
             loadDemo()
           }}
         >
-          <Play size={12} fill="currentColor" /> Demo
+          <Play size={12} fill="currentColor" /> {t('demo')}
         </button>
       </div>
       {error && <div className="error source-error">{error}</div>}

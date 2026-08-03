@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Captions, Check, Download, FileText, Key, LoaderCircle, Play, Upload, X } from 'lucide-react'
 import { exportToSRT, fmt, parseSRT } from '../utils/formatters'
 import { Timeline } from './Timeline'
+import { useI18n } from '../i18n'
 
 export function MediaPanel({
   source,
@@ -27,6 +28,7 @@ export function MediaPanel({
   onDurationDiscovered,
   onCustomSegmentsImport
 }) {
+  const { t } = useI18n()
   const [showFullTranscript, setShowFullTranscript] = useState(false)
   const srtInputRef = useRef(null)
 
@@ -78,10 +80,10 @@ export function MediaPanel({
             {source.type === 'youtube'
               ? `${source.author} · YouTube`
               : `${((source.size || 0) / 1000000).toFixed(1)} MB`}{' '}
-            · {segments.length ? `${segments.length} wypowiedzi` : 'gotowy do analizy'}
+            · {segments.length ? `${segments.length} ${t('utterances')}` : t('ready')}
           </small>
         </div>
-        <button className="icon-button" onClick={reset} aria-label="Usuń materiał" title="Usuń plik / otwórz inny">
+        <button className="icon-button" onClick={reset} aria-label={t('removeMedia')} title={t('removeMedia')}>
           <X size={16} />
         </button>
       </div>
@@ -108,8 +110,7 @@ export function MediaPanel({
             <span className="demo-play">
               <Play size={21} fill="currentColor" />
             </span>
-            <strong>Materiał demonstracyjny</strong>
-            <small>01:56 · rozmowa zespołu</small>
+            <strong>{t('demoMedia')}</strong><small>01:56 · {t('teamTalk')}</small>
           </div>
         )}
         <div className="view-tag">SOURCE / {source.type === 'youtube' ? 'YT' : '01'}</div>
@@ -127,7 +128,7 @@ export function MediaPanel({
         <>
           <div className="analysis-ready">
             <span>
-              <Check size={13} /> Wczytano {segments.length} wypowiedzi
+              <Check size={13} /> {t('loaded')} {segments.length} {t('utterances')}
             </span>
             <div className="analysis-actions">
               <button
@@ -136,7 +137,7 @@ export function MediaPanel({
                 onClick={() => setShowFullTranscript(!showFullTranscript)}
                 title="Pokaż / ukryj listę wszystkich segmentów"
               >
-                <FileText size={12} /> {showFullTranscript ? 'Ukryj transkrypcję' : 'Pełna transkrypcja'}
+                <FileText size={12} /> {showFullTranscript ? t('hideTranscript') : t('showTranscript')}
               </button>
               <button
                 type="button"
@@ -160,8 +161,7 @@ export function MediaPanel({
           {showFullTranscript && (
             <div className="full-transcript-box">
               <div className="transcript-box-header">
-                <span>Pełny zapis rozmowy</span>
-                <b>{segments.length} wypowiedzi</b>
+                <span>{t('fullRecord')}</span><b>{segments.length} {t('utterances')}</b>
               </div>
               <div className="transcript-scroll">
                 {segments.map((seg, idx) => (
@@ -185,10 +185,10 @@ export function MediaPanel({
           <button className="primary-action" onClick={transcribe} disabled={status === 'transcribing'}>
             {status === 'transcribing' ? <LoaderCircle className="spin" size={17} /> : <Captions size={17} />}
             {status === 'transcribing'
-              ? transcriptionProgress || `Generuję transkrypcję (${providerName})...`
+              ? transcriptionProgress || `${t('generate')} (${providerName})...`
               : apiKey || apiProvider === 'local'
-              ? `Uruchom transkrypcję (${providerName})`
-              : 'Uruchom transkrypcję'}
+              ? `${t('runTranscription')} (${providerName})`
+              : t('runTranscription')}
           </button>
           <div className="media-extra-actions">
             <button
@@ -196,15 +196,15 @@ export function MediaPanel({
               className="subtle-btn"
               onClick={() => srtInputRef.current?.click()}
             >
-              <Upload size={12} /> Wgraj własny plik napisów (SRT / VTT)
+              <Upload size={12} /> {t('uploadSubs')}
             </button>
           </div>
           <p className="demo-notice">
             {apiKey || apiProvider === 'local' ? (
-              <span>Używasz klucza API: <strong>{providerName}</strong></span>
+              <span>{t('usingKey')} <strong>{providerName}</strong></span>
             ) : (
               <span>
-                Wymagany klucz API do pełnej analizy nagrania. <button type="button" className="text-inline-link" onClick={onOpenApiModal}>Skonfiguruj klucz API</button>
+                {t('keyRequired')} <button type="button" className="text-inline-link" onClick={onOpenApiModal}>{t('configure')}</button>
               </span>
             )}
           </p>

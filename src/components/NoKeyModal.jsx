@@ -1,7 +1,9 @@
 import React from 'react'
 import { Key, Play, Sparkles, X } from 'lucide-react'
+import { useI18n } from '../i18n'
 
 export function NoKeyModal({ isOpen, onClose, onOpenSettings, onUseDemo }) {
+  const { t } = useI18n()
   if (!isOpen) return null
 
   return (
@@ -13,28 +15,27 @@ export function NoKeyModal({ isOpen, onClose, onOpenSettings, onUseDemo }) {
               <Key size={18} />
             </span>
             <div>
-              <h3>Brak skonfigurowanego klucza API</h3>
-              <small>Przeglądarkowa analiza wideo / audio</small>
+              <h3>{t('noKeyTitle')}</h3><small>{t('browserAnalysis')}</small>
             </div>
           </div>
-          <button className="icon-button" onClick={onClose} aria-label="Zamknij">
+          <button className="icon-button" onClick={onClose} aria-label={t('close')}>
             <X size={18} />
           </button>
         </div>
 
         <div className="modal-body">
           <p className="notice-text">
-            Nie dodałeś jeszcze swojego klucza API (OpenAI, Gemini lub Groq). Ponieważ projekt działa w całości w przeglądarce, możesz skorzystać z dwóch opcji:
+            {t('noKeyText')}
           </p>
 
           <div className="notice-options">
             <div className="option-card primary">
               <div className="option-head">
                 <Sparkles size={18} />
-                <strong>Opcja 1: Przełącz w tryb Demo (Zalecane)</strong>
+                <strong>{t('optionDemo')}</strong>
               </div>
               <p>
-                Użyj wbudowanych danych demonstracyjnych. Przeprowadzisz pełne wyszukiwanie tekstowe, przetestujesz interaktywne znacznik czasu i sprawdzisz eksport plików SRT w 5 sekund.
+                {t('optionDemoText')}
               </p>
               <button
                 type="button"
@@ -44,17 +45,17 @@ export function NoKeyModal({ isOpen, onClose, onOpenSettings, onUseDemo }) {
                   onClose()
                 }}
               >
-                <Play size={13} fill="currentColor" /> Wypróbuj w trybie Demo
+                <Play size={13} fill="currentColor" /> {t('tryDemo')}
               </button>
             </div>
 
             <div className="option-card secondary">
               <div className="option-head">
                 <Key size={18} />
-                <strong>Opcja 2: Podaj swój klucz API</strong>
+                <strong>{t('optionKey')}</strong>
               </div>
               <p>
-                Dodaj swój klucz API z OpenAI (Whisper), Google Gemini lub Groq Cloud. Klucz zostanie zapisany w 100% lokalnie w Twojej przeglądarce (`localStorage`).
+                {t('optionKeyText')}
               </p>
               <button
                 type="button"
@@ -64,7 +65,7 @@ export function NoKeyModal({ isOpen, onClose, onOpenSettings, onUseDemo }) {
                   onOpenSettings()
                 }}
               >
-                <Key size={13} /> Skonfiguruj klucz API
+                <Key size={13} /> {t('configure')}
               </button>
             </div>
           </div>

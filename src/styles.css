@@ -39,6 +39,7 @@
 .api-status-badge:hover{border-color:#5a606a;color:#fff}
 .api-status-badge.active{border-color:#416827;background:#111a0d;color:var(--acid)}
 .api-status-badge.demo{border-color:#4b3d18;background:#1a160a;color:#ffd24c}
+.language-switch{display:flex;border:1px solid #2e3238}.language-switch button{border:0;background:transparent;color:#6f747d;font:500 8px 'DM Mono';padding:6px 7px;cursor:pointer}.language-switch button.active{background:var(--acid);color:var(--ink)}
 
 .test-result-banner{display:flex;align-items:center;gap:8px;padding:10px 12px;font-size:10px;border:1px solid transparent}
 .test-result-banner.success{background:#101b0e;border-color:#3b6628;color:var(--acid)}
@@ -105,4 +106,3 @@
 .action-btn-key{height:36px;margin-top:4px;background:none;border:1px solid #424750;color:#fff;font:600 9px Manrope;text-transform:uppercase;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer}
 .action-btn-key:hover{border-color:var(--acid);color:var(--acid)}
 .text-inline-link{background:none;border:0;color:var(--acid);text-decoration:underline;cursor:pointer;padding:0;font:inherit}
-

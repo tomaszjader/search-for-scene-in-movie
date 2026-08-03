@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { Check, Clock3, Command, Copy, CornerDownLeft, Download, LoaderCircle, Play, Quote, Search, Sparkles, X } from 'lucide-react'
 import { exportToSRT, fmt } from '../utils/formatters'
 import { HighlightedText } from './HighlightedText'
+import { useI18n } from '../i18n'
 
 export function SearchPanel({
   query,
@@ -16,13 +17,12 @@ export function SearchPanel({
   playClip,
   sourceName = 'film'
 }) {
+  const { t } = useI18n()
   const inputRef = useRef(null)
   const [copiedId, setCopiedId] = useState(null)
 
   const suggestions = [
-    'Czy Piastowie byli nordami?',
-    'Co badacz mówi o genetyce Słowian?',
-    'Jaki jest główny wniosek?'
+    t('suggestion1'), t('suggestion2'), t('suggestion3')
   ]
 
   useEffect(() => {
@@ -49,8 +49,7 @@ export function SearchPanel({
       <div className="panel-heading search-heading">
         <span className="panel-index">02</span>
         <div>
-          <strong>Znajdź moment & Odpowiedź AI</strong>
-          <small>Agent AI przeczyta nagranie i odpowie na Twoje pytanie</small>
+          <strong>{t('find')}</strong><small>{t('findSub')}</small>
         </div>
         <div className="key" onClick={() => inputRef.current?.focus()} style={{ cursor: 'pointer' }} title="Naciśnij Ctrl+K lub Cmd+K">
           <Command size={11} /> K
@@ -64,25 +63,25 @@ export function SearchPanel({
           value={query}
           onChange={event => setQuery(event.target.value)}
           disabled={!segments.length}
-          placeholder="np. Czy Piastowie pochodzili ze Skandynawii?"
+          placeholder={t('searchPlaceholder')}
         />
         {query && (
           <button
             type="button"
             className="clear-btn"
             onClick={() => setQuery('')}
-            title="Wyczyść zapytanie"
+            title={t('clear')}
           >
             <X size={14} />
           </button>
         )}
-        <button disabled={!query.trim() || !segments.length} aria-label="Szukaj">
+        <button disabled={!query.trim() || !segments.length} aria-label={t('search')}>
           {status === 'searching' ? <LoaderCircle className="spin" size={17} /> : <CornerDownLeft size={16} />}
         </button>
       </form>
 
       <div className="suggestions">
-        <span>Podpowiedzi</span>
+        <span>{t('suggestions')}</span>
         {suggestions.map(item => (
           <button
             type="button"
@@ -102,7 +101,7 @@ export function SearchPanel({
           <div className="ai-agent-card">
             <div className="ai-agent-header">
               <span className="ai-badge">
-                <Sparkles size={13} /> ASYSTENT AI FILMU (RAG)
+                <Sparkles size={13} /> {t('aiAssistant')}
               </span>
               {results[0] && (
                 <button
@@ -110,19 +109,19 @@ export function SearchPanel({
                   className="jump-moment-btn"
                   onClick={() => playClip(results[0])}
                 >
-                  <Play size={11} fill="currentColor" /> Skocz do sekundy ({fmt(results[0].start)})
+                  <Play size={11} fill="currentColor" /> {t('jump')} ({fmt(results[0].start)})
                 </button>
               )}
             </div>
             <div className="ai-agent-body">
-              <strong>Odpowiedź na podstawie nagrania:</strong>
+              <strong>{t('basedAnswer')}</strong>
               <p>{aiAnswer}</p>
 
               {exactQuote && (
                 <div className="ai-exact-quote">
                   <Quote size={12} />
                   <span>
-                    <strong>Cytat z nagrania:</strong> „{exactQuote}”
+                    <strong>{t('quote')}</strong> „{exactQuote}”
                   </span>
                 </div>
               )}
@@ -135,13 +134,12 @@ export function SearchPanel({
             <div className="empty-glyph">
               <Search size={20} />
             </div>
-            <strong>{segments.length ? 'Materiał czeka na pytanie' : 'Najpierw przeanalizuj nagranie'}</strong>
-            <p>Wpisz pytanie w języku naturalnym — Agent AI znajdzie moment i odpowie na pytanie w oparciu o cytaty.</p>
+            <strong>{segments.length ? t('waiting') : t('analyzeFirst')}</strong><p>{t('emptyHelp')}</p>
           </div>
         ) : (
           <>
             <div className="results-header">
-              <span>Powiązane fragmenty wideo</span>
+              <span>{t('related')}</span>
               <div className="results-actions">
                 <button
                   type="button"
@@ -168,11 +166,11 @@ export function SearchPanel({
                         <Clock3 size={12} /> {fmt(result.start)} — {fmt(result.end)}
                       </span>
                       <div className="result-meta-right">
-                        <b>{activeResult === result.id ? 'PLAYING' : `${result.matchPercent || 95}% MATCH`}</b>
+                        <b>{activeResult === result.id ? t('playing') : `${result.matchPercent || 95}% ${t('match')}`}</b>
                         <span
                           className="copy-btn"
                           onClick={e => copyQuote(result, e)}
-                          title="Kopiuj cytat ze znacznikiem czasu"
+                          title={t('copyQuote')}
                         >
                           {copiedId === result.id ? <Check size={11} /> : <Copy size={11} />}
                         </span>
