@@ -20,7 +20,7 @@ import { useI18n } from './i18n'
 
 export function App() {
   const { language } = useI18n()
-  const msg = (pl, en) => language === 'pl' ? pl : en
+  const msg = (pl, en, de = en) => language === 'pl' ? pl : language === 'de' ? de : en
   const [source, setSource] = useState(null)
   const [youtubeUrl, setYoutubeUrl] = useState('')
   const [localUrl, setLocalUrl] = useState('')
@@ -89,15 +89,15 @@ export function App() {
     const maxFileSize = 200 * 1024 * 1024
 
     if (!supportedTypes.has(file.type)) {
-      setError(msg('Nieobsługiwany format. Wybierz plik MP4, WEBM, MP3 lub WAV.', 'Unsupported format. Choose an MP4, WEBM, MP3, or WAV file.'))
+      setError(msg('Nieobsługiwany format. Wybierz plik MP4, WEBM, MP3 lub WAV.', 'Unsupported format. Choose an MP4, WEBM, MP3, or WAV file.', 'Nicht unterstütztes Format. Wähle eine MP4-, WEBM-, MP3- oder WAV-Datei.'))
       return
     }
     if (file.size > maxFileSize) {
-      setError(msg('Plik jest za duży. Maksymalny rozmiar to 200 MB.', 'The file is too large. Maximum size is 200 MB.'))
+      setError(msg('Plik jest za duży. Maksymalny rozmiar to 200 MB.', 'The file is too large. Maximum size is 200 MB.', 'Die Datei ist zu groß. Die maximale Größe beträgt 200 MB.'))
       return
     }
     if (file.size === 0) {
-      setError(msg('Wybrany plik jest pusty.', 'The selected file is empty.'))
+      setError(msg('Wybrany plik jest pusty.', 'The selected file is empty.', 'Die ausgewählte Datei ist leer.'))
       return
     }
 
@@ -144,7 +144,7 @@ export function App() {
 
     if (source.type === 'youtube' && window.frameFinderDesktop?.transcribeYouTube) {
       try {
-        setTranscriptionProgress(msg('Rozpoczynam transkrypcję…', 'Starting transcription…'))
+        setTranscriptionProgress(msg('Rozpoczynam transkrypcję…', 'Starting transcription…', 'Transkription wird gestartet…'))
         const result = await window.frameFinderDesktop.transcribeYouTube({
           url: `https://www.youtube.com/watch?v=${source.videoId}`,
           apiKey,
@@ -224,7 +224,7 @@ export function App() {
       }
     }
 
-    setError(msg('Aby wygenerować transkrypcję AI, dodaj swój klucz API w ustawieniach.', 'Add your API key in settings to generate an AI transcript.'))
+    setError(msg('Aby wygenerować transkrypcję AI, dodaj swój klucz API w ustawieniach.', 'Add your API key in settings to generate an AI transcript.', 'Füge deinen API-Schlüssel in den Einstellungen hinzu, um ein KI-Transkript zu erstellen.'))
     setStatus('ready')
   }
 
@@ -233,11 +233,11 @@ export function App() {
     if (!youtubeUrl.trim()) return
     const videoId = youtubeId(youtubeUrl)
     if (!videoId || !/^[\w-]{11}$/.test(videoId)) {
-      setError(msg('Wklej prawidłowy link do filmu z YouTube.', 'Paste a valid YouTube video link.'))
+      setError(msg('Wklej prawidłowy link do filmu z YouTube.', 'Paste a valid YouTube video link.', 'Füge einen gültigen YouTube-Videolink ein.'))
       return
     }
 
-    setSource({ type: 'youtube', name: msg('Film z YouTube', 'YouTube video'), author: 'YouTube', videoId })
+    setSource({ type: 'youtube', name: msg('Film z YouTube', 'YouTube video', 'YouTube-Video'), author: 'YouTube', videoId })
     setSegments([])
     setResults([])
     setAiAnswer('')
@@ -269,8 +269,8 @@ export function App() {
       setStatus('ready')
       setError(
           apiKey || apiProvider === 'local'
-          ? msg('Brak dostępnych napisów. Uruchom transkrypcję, aby pobrać audio.', 'No captions are available. Start transcription to download and transcribe the audio.')
-          : msg('Brak dostępnych napisów. Dodaj klucz OpenAI lub Groq, a następnie uruchom transkrypcję.', 'No captions are available. Add an OpenAI or Groq key, then start transcription.')
+          ? msg('Brak dostępnych napisów. Uruchom transkrypcję, aby pobrać audio.', 'No captions are available. Start transcription to download and transcribe the audio.', 'Keine Untertitel verfügbar. Starte die Transkription, um das Audio herunterzuladen und zu transkribieren.')
+          : msg('Brak dostępnych napisów. Dodaj klucz OpenAI lub Groq, a następnie uruchom transkrypcję.', 'No captions are available. Add an OpenAI or Groq key, then start transcription.', 'Keine Untertitel verfügbar. Füge einen OpenAI- oder Groq-Schlüssel hinzu und starte dann die Transkription.')
       )
       return
     }
@@ -310,12 +310,12 @@ export function App() {
 
     setStatus('ready')
     setError(
-      msg('Ten film nie posiada wbudowanych napisów. Uruchom transkrypcję lub dodaj klucz API.', 'This video has no embedded captions. Start transcription or add your API key.')
+      msg('Ten film nie posiada wbudowanych napisów. Uruchom transkrypcję lub dodaj klucz API.', 'This video has no embedded captions. Start transcription or add your API key.', 'Dieses Video hat keine eingebetteten Untertitel. Starte die Transkription oder füge deinen API-Schlüssel hinzu.')
     )
   }
 
   const loadDemo = () => {
-    setSource({ type: 'demo', name: msg('Rozmowa z zespołem.mp4', 'Team conversation.mp4'), size: 48200000 })
+    setSource({ type: 'demo', name: msg('Rozmowa z zespołem.mp4', 'Team conversation.mp4', 'Teamgespräch.mp4'), size: 48200000 })
     setLocalUrl('')
     setSegments(demoData)
     setStatus('ready')
@@ -403,7 +403,7 @@ export function App() {
       setResults(matches.slice(0, 8))
     } else {
       setResults([])
-      setError(msg('Nie znaleziono pasujących fragmentów. Spróbuj zmienić zapytanie.', 'No matching moments were found. Try changing your query.'))
+      setError(msg('Nie znaleziono pasujących fragmentów. Spróbuj zmienić zapytanie.', 'No matching moments were found. Try changing your query.', 'Keine passenden Momente gefunden. Versuche eine andere Suchanfrage.'))
     }
     setStatus('ready')
   }

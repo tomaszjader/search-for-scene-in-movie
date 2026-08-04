@@ -20,6 +20,16 @@ const translations = {
     workflow1: 'Add a link or file', workflow1s: 'YouTube, video, or audio', workflow2: 'Ask a question', workflow2s: 'In your own words', workflow3: 'Play the scene', workflow3s: 'From the exact second', privacy: 'Private recordings. Precise answers.',
     apiTitle: 'API key settings', chooseProvider: 'Choose an AI / transcription provider:', apiKey: 'API key', hideKey: 'Hide key', showKey: 'Show key', security: 'Your key is stored only in your browser (localStorage). It is never sent to an intermediary server.', deleteKey: 'Delete key', useDemo: 'Use Demo mode', testing: 'Testing key...', saved: 'Saved!', chooseLocal: 'Choose local transcription', testSave: 'Test and save API key', close: 'Close',
     noKeyTitle: 'No API key configured', browserAnalysis: 'Browser-based video / audio analysis', noKeyText: 'You have not added an API key yet. Choose one of these two options:', optionDemo: 'Option 1: Switch to Demo mode (Recommended)', optionDemoText: 'Use built-in demo data to test search, interactive timestamps, and SRT export.', tryDemo: 'Try Demo mode', optionKey: 'Option 2: Enter your API key', optionKeyText: 'Add an OpenAI, Google Gemini, or Groq Cloud key. It will be stored only in your browser.'
+  },
+  de: {
+    desktopApp: 'Desktop-App', how: 'So funktioniert es', noKey: 'Kein API-Schlüssel (Demo)', apiSettings: 'API-Schlüssel-Einstellungen (BYOK)',
+    kicker: 'Suchmaschine für Videomomente', hero1: 'Frag deine Aufnahme.', hero2: 'Finde den richtigen Moment.', heroText: 'Füge einen YouTube-Link ein oder lade eine eigene Datei hoch. Beschreibe eine Szene, ein Zitat oder ein Thema und erhalte den genauen Moment.',
+    youtubeFiles: 'YOUTUBE + DATEIEN', natural: 'NATÜRLICHE SPRACHE', precision: 'SEKUNDENGENAU', youtubeLink: '01 / YOUTUBE-LINK', pasteLink: 'Videolink einfügen', directYoutube: 'Direkt von YouTube abspielen', open: 'Öffnen', or: 'oder', diskFile: 'DATEI VOM COMPUTER', drop: 'Aufnahme ablegen oder Datei auswählen', maxFile: 'MP4, WEBM, MP3, WAV · max. 200 MB', demo: 'Demo',
+    find: 'Moment finden & KI-Antwort', findSub: 'Der KI-Agent liest die Aufnahme und beantwortet deine Frage', searchPlaceholder: 'z. B. Was ist die wichtigste Schlussfolgerung?', clear: 'Suchanfrage löschen', search: 'Suchen', suggestions: 'Vorschläge', suggestion1: 'Was ist das Hauptthema?', suggestion2: 'Was sagt der Sprecher über die Forschung?', suggestion3: 'Was ist die wichtigste Schlussfolgerung?', aiAssistant: 'VIDEO-KI-ASSISTENT (RAG)', jump: 'Zum Zeitpunkt springen', basedAnswer: 'Antwort auf Grundlage der Aufnahme:', quote: 'Zitat aus der Aufnahme:', waiting: 'Die Aufnahme ist bereit für eine Frage', analyzeFirst: 'Analysiere zuerst eine Aufnahme', emptyHelp: 'Stelle eine Frage in natürlicher Sprache — der KI-Agent findet den Moment und antwortet mit Zitaten.', related: 'Ähnliche Videomomente', playing: 'WIEDERGABE', match: 'TREFFER', copyQuote: 'Zitat mit Zeitstempel kopieren',
+    utterances: 'Segmente', ready: 'bereit zur Analyse', removeMedia: 'Medium entfernen / anderes öffnen', demoMedia: 'Demoaufnahme', teamTalk: 'Teamgespräch', loaded: 'Geladen', showTranscript: 'Vollständiges Transkript', hideTranscript: 'Transkript ausblenden', fullRecord: 'Vollständiges Transkript', generate: 'Transkript wird erstellt', runTranscription: 'Transkription starten', uploadSubs: 'Eigene Untertitel hochladen (SRT / VTT)', usingKey: 'API-Anbieter:', keyRequired: 'Für die vollständige Analyse ist ein API-Schlüssel erforderlich.', configure: 'API-Schlüssel konfigurieren', timeline: 'Momente auf der Zeitleiste', result: 'Ergebnis', playback: 'Wiedergabe',
+    workflow1: 'Link oder Datei hinzufügen', workflow1s: 'YouTube, Video oder Audio', workflow2: 'Eine Frage stellen', workflow2s: 'Mit eigenen Worten', workflow3: 'Szene abspielen', workflow3s: 'Ab der genauen Sekunde', privacy: 'Private Aufnahmen. Präzise Antworten.',
+    apiTitle: 'API-Schlüssel-Einstellungen', chooseProvider: 'KI- / Transkriptionsanbieter wählen:', apiKey: 'API-Schlüssel', hideKey: 'Schlüssel ausblenden', showKey: 'Schlüssel anzeigen', security: 'Dein Schlüssel wird ausschließlich in deinem Browser (localStorage) gespeichert und nie an einen Zwischenserver gesendet.', deleteKey: 'Schlüssel löschen', useDemo: 'Demo-Modus verwenden', testing: 'Schlüssel wird getestet ...', saved: 'Gespeichert!', chooseLocal: 'Lokale Transkription wählen', testSave: 'API-Schlüssel testen und speichern', close: 'Schließen',
+    noKeyTitle: 'Kein API-Schlüssel konfiguriert', browserAnalysis: 'Browserbasierte Video- / Audioanalyse', noKeyText: 'Du hast noch keinen API-Schlüssel hinzugefügt. Wähle eine der beiden Optionen:', optionDemo: 'Option 1: Zum Demo-Modus wechseln (Empfohlen)', optionDemoText: 'Nutze die integrierten Demodaten, um Suche, interaktive Zeitstempel und SRT-Export zu testen.', tryDemo: 'Demo-Modus ausprobieren', optionKey: 'Option 2: API-Schlüssel eingeben', optionKeyText: 'Füge einen Schlüssel von OpenAI, Google Gemini oder Groq Cloud hinzu. Er wird nur lokal in deinem Browser gespeichert.'
   }
 }
 
@@ -29,8 +39,13 @@ export function I18nProvider({ children }) {
   useEffect(() => {
     localStorage.setItem('framefinder_language', language)
     document.documentElement.lang = language
-    document.title = language === 'pl' ? 'Framefinder — znajdź właściwy moment' : 'Framefinder — find the right moment'
-    document.querySelector('meta[name="description"]')?.setAttribute('content', language === 'pl' ? 'Semantyczna wyszukiwarka momentów w nagraniach wideo i audio.' : 'Semantic moment search for video and audio recordings.')
+    const metadata = {
+      pl: ['Framefinder — znajdź właściwy moment', 'Semantyczna wyszukiwarka momentów w nagraniach wideo i audio.'],
+      en: ['Framefinder — find the right moment', 'Semantic moment search for video and audio recordings.'],
+      de: ['Framefinder — finde den richtigen Moment', 'Semantische Suche nach Momenten in Video- und Audioaufnahmen.']
+    }[language] || []
+    document.title = metadata[0]
+    document.querySelector('meta[name="description"]')?.setAttribute('content', metadata[1])
   }, [language])
   const value = useMemo(() => ({ language, setLanguage, t: key => translations[language]?.[key] ?? translations.pl[key] ?? key }), [language])
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>

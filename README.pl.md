@@ -1,6 +1,6 @@
 # FrameFinder
 
-**Polski** | [English](README.md)
+**Polski** | [English](README.md) | [Deutsch](README.de.md)
 
 FrameFinder to aplikacja desktopowa Electron do tworzenia pełnych transkrypcji filmów i wyszukiwania konkretnych wypowiedzi oraz momentów nagrania.
 

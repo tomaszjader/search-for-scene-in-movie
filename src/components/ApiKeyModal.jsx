@@ -121,10 +121,10 @@ export function ApiKeyModal({
                 }}
               >
                 <div className="provider-card-head">
-                  <strong>{p.id === 'local' && language === 'en' ? 'Local' : p.name}</strong>
+                  <strong>{p.id === 'local' && language !== 'pl' ? (language === 'de' ? 'Lokal' : 'Local') : p.name}</strong>
                   <span className="provider-model">{p.model}</span>
                 </div>
-                <p>{language === 'pl' ? p.desc : ({ local: 'No key and no audio upload. The model downloads on first use.', openai: 'Transcribe audio/video and generate matching moments.', gemini: 'Native content analysis and timestamped summaries.', groq: 'Fast transcription with a free request allowance.' }[p.id])}</p>
+                <p>{language === 'pl' ? p.desc : language === 'de' ? ({ local: 'Kein Schlüssel und kein Audio-Upload. Das Modell wird beim ersten Einsatz geladen.', openai: 'Audio/Video transkribieren und passende Momente erzeugen.', gemini: 'Native Inhaltsanalyse und Zusammenfassungen mit Zeitstempeln.', groq: 'Schnelle Transkription mit kostenlosem Anfragekontingent.' }[p.id]) : ({ local: 'No key and no audio upload. The model downloads on first use.', openai: 'Transcribe audio/video and generate matching moments.', gemini: 'Native content analysis and timestamped summaries.', groq: 'Fast transcription with a free request allowance.' }[p.id])}</p>
               </button>
             ))}
           </div>

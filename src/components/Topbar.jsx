@@ -32,6 +32,7 @@ export function Topbar({ apiKey, apiProvider, onOpenApiModal }) {
         <div className="language-switch" aria-label="Language">
           <button className={language === 'pl' ? 'active' : ''} onClick={() => setLanguage('pl')}>PL</button>
           <button className={language === 'en' ? 'active' : ''} onClick={() => setLanguage('en')}>EN</button>
+          <button className={language === 'de' ? 'active' : ''} onClick={() => setLanguage('de')}>DE</button>
         </div>
         <a className="how-link" href="#workflow">
           {t('how')} <ArrowUpRight size={14} />
