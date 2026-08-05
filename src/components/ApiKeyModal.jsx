@@ -64,8 +64,8 @@ export function ApiKeyModal({
       setTestResult({
         success: true,
         message: tempProvider === 'local'
-          ? 'Wybrano lokalną transkrypcję Whisper.'
-          : `Klucz ${tempProvider.toUpperCase()} jest aktywny i poprawny!`
+          ? (language === 'es' ? 'Se ha seleccionado la transcripción local con Whisper.' : language === 'de' ? 'Lokale Whisper-Transkription ausgewählt.' : language === 'en' ? 'Local Whisper transcription selected.' : 'Wybrano lokalną transkrypcję Whisper.')
+          : (language === 'es' ? `¡La clave de ${tempProvider.toUpperCase()} está activa y es válida!` : language === 'de' ? `Der ${tempProvider.toUpperCase()}-Schlüssel ist aktiv und gültig!` : language === 'en' ? `The ${tempProvider.toUpperCase()} key is active and valid!` : `Klucz ${tempProvider.toUpperCase()} jest aktywny i poprawny!`)
       })
       onSaveKey(tempKey.trim(), tempProvider)
 
@@ -77,7 +77,7 @@ export function ApiKeyModal({
       setIsTesting(false)
       setTestResult({
         success: false,
-        message: err.message || 'Wystąpił błąd podczas weryfikacji klucza API.'
+        message: err.message || (language === 'es' ? 'Se produjo un error al verificar la clave API.' : language === 'de' ? 'Bei der Überprüfung des API-Schlüssels ist ein Fehler aufgetreten.' : language === 'en' ? 'An error occurred while verifying the API key.' : 'Wystąpił błąd podczas weryfikacji klucza API.')
       })
     }
   }
@@ -121,10 +121,10 @@ export function ApiKeyModal({
                 }}
               >
                 <div className="provider-card-head">
-                  <strong>{p.id === 'local' && language !== 'pl' ? (language === 'de' ? 'Lokal' : 'Local') : p.name}</strong>
+                  <strong>{p.id === 'local' && language !== 'pl' ? (language === 'de' ? 'Lokal' : language === 'es' ? 'Local' : 'Local') : p.name}</strong>
                   <span className="provider-model">{p.model}</span>
                 </div>
-                <p>{language === 'pl' ? p.desc : language === 'de' ? ({ local: 'Kein Schlüssel und kein Audio-Upload. Das Modell wird beim ersten Einsatz geladen.', openai: 'Audio/Video transkribieren und passende Momente erzeugen.', gemini: 'Native Inhaltsanalyse und Zusammenfassungen mit Zeitstempeln.', groq: 'Schnelle Transkription mit kostenlosem Anfragekontingent.' }[p.id]) : ({ local: 'No key and no audio upload. The model downloads on first use.', openai: 'Transcribe audio/video and generate matching moments.', gemini: 'Native content analysis and timestamped summaries.', groq: 'Fast transcription with a free request allowance.' }[p.id])}</p>
+                <p>{language === 'pl' ? p.desc : language === 'de' ? ({ local: 'Kein Schlüssel und kein Audio-Upload. Das Modell wird beim ersten Einsatz geladen.', openai: 'Audio/Video transkribieren und passende Momente erzeugen.', gemini: 'Native Inhaltsanalyse und Zusammenfassungen mit Zeitstempeln.', groq: 'Schnelle Transkription mit kostenlosem Anfragekontingent.' }[p.id]) : language === 'es' ? ({ local: 'Sin clave ni envío de audio. El modelo se descarga la primera vez que se usa.', openai: 'Transcribe audio/vídeo y genera momentos coincidentes.', gemini: 'Análisis nativo del contenido y resúmenes con marcas de tiempo.', groq: 'Transcripción rápida con una cuota gratuita de solicitudes.' }[p.id]) : ({ local: 'No key and no audio upload. The model downloads on first use.', openai: 'Transcribe audio/video and generate matching moments.', gemini: 'Native content analysis and timestamped summaries.', groq: 'Fast transcription with a free request allowance.' }[p.id])}</p>
               </button>
             ))}
           </div>
