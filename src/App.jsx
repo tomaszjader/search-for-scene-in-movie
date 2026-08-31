@@ -4,9 +4,7 @@ import { queryWords, removeAccents, youtubeId } from './utils/formatters'
 import {
   fetchYoutubeCaptions,
   performAiSemanticSearch,
-  transcribeWithGemini,
-  transcribeWithOpenAI,
-  transcribeYoutubeWithOpenAI
+  transcribeWithOpenAI
 } from './utils/youtubeTranscripts'
 import { Topbar } from './components/Topbar'
 import { Hero } from './components/Hero'
@@ -185,43 +183,12 @@ export function App() {
       }
     }
 
-    // 2. YouTube video or text source with OpenAI API Key
-    if (apiKey && apiProvider === 'openai') {
-      try {
-        const targetDur = mediaDuration || source.duration || 3229
-        const aiSegments = await transcribeYoutubeWithOpenAI(source.name || 'Film', apiKey, targetDur)
-        if (aiSegments && aiSegments.length > 0) {
-          setSegments(aiSegments)
-          const lastSeg = aiSegments[aiSegments.length - 1]
-          if (lastSeg?.end) setMediaDuration(lastSeg.end)
-          setStatus('ready')
-          return
-        }
-      } catch (err) {
-        console.warn('OpenAI API error:', err)
-        setError(`${msg('Błąd OpenAI API', 'OpenAI API error', 'OpenAI-API-Fehler', 'Error de la API de OpenAI')}: ${err.message}`)
-        setStatus('ready')
-        return
-      }
-    }
-
-    // 3. Gemini API
+    // 2. Gemini API for uploaded local files is not supported here yet.
+    // YouTube without captions must be transcribed by the Electron pipeline,
+    // which downloads the actual audio first. Never synthesize a transcript
+    // from the video title or metadata.
     if (apiKey && apiProvider === 'gemini') {
-      try {
-        const geminiSegments = await transcribeWithGemini(source.name, apiKey)
-        if (geminiSegments && geminiSegments.length > 0) {
-          setSegments(geminiSegments)
-          const lastSeg = geminiSegments[geminiSegments.length - 1]
-          if (lastSeg?.end) setMediaDuration(lastSeg.end)
-          setStatus('ready')
-          return
-        }
-      } catch (err) {
-        console.warn('Gemini API error:', err)
-        setError(`${msg('Błąd Gemini API', 'Gemini API error', 'Gemini-API-Fehler', 'Error de la API de Gemini')}: ${err.message}`)
-        setStatus('ready')
-        return
-      }
+      setError(msg('Gemini obsługuje obecnie tylko analizę napisów YouTube. Dla plików lokalnych wybierz OpenAI lub transkrypcję lokalną.', 'Gemini currently supports YouTube caption analysis only. For local files, choose OpenAI or local transcription.', 'Gemini unterstützt derzeit nur die Analyse von YouTube-Untertiteln. Für lokale Dateien wähle OpenAI oder lokale Transkription.', 'Gemini actualmente solo admite el análisis de subtítulos de YouTube. Para archivos locales, elige OpenAI o transcripción local.'))
     }
 
     setError(msg('Aby wygenerować transkrypcję AI, dodaj swój klucz API w ustawieniach.', 'Add your API key in settings to generate an AI transcript.', 'Füge deinen API-Schlüssel in den Einstellungen hinzu, um ein KI-Transkript zu erstellen.', 'Añade tu clave API en los ajustes para generar una transcripción con IA.'))
@@ -273,39 +240,6 @@ export function App() {
           : msg('Brak dostępnych napisów. Dodaj klucz OpenAI lub Groq, a następnie uruchom transkrypcję.', 'No captions are available. Add an OpenAI or Groq key, then start transcription.', 'Keine Untertitel verfügbar. Füge einen OpenAI- oder Groq-Schlüssel hinzu und starte dann die Transkription.', 'No hay subtítulos disponibles. Añade una clave de OpenAI o Groq y después inicia la transcripción.')
       )
       return
-    }
-
-    if (apiKey && apiProvider === 'openai') {
-      try {
-        const targetDur = mediaDuration || 3229
-        const aiSegments = await transcribeYoutubeWithOpenAI('Film YouTube ' + videoId, apiKey, targetDur)
-        if (aiSegments && aiSegments.length > 0) {
-          setSegments(aiSegments)
-          const lastSeg = aiSegments[aiSegments.length - 1]
-          const fullDuration = lastSeg?.end || targetDur
-          setMediaDuration(fullDuration)
-          setSource(prev => ({ ...prev, duration: fullDuration }))
-          setStatus('ready')
-          return
-        }
-      } catch (e) {
-        console.warn('OpenAI YT fallback error:', e)
-      }
-    } else if (apiKey && apiProvider === 'gemini') {
-      try {
-        const geminiSegments = await transcribeWithGemini('Film YouTube ' + videoId, apiKey)
-        if (geminiSegments && geminiSegments.length > 0) {
-          setSegments(geminiSegments)
-          const lastSeg = geminiSegments[geminiSegments.length - 1]
-          const fullDuration = lastSeg?.end || 3229
-          setMediaDuration(fullDuration)
-          setSource(prev => ({ ...prev, duration: fullDuration }))
-          setStatus('ready')
-          return
-        }
-      } catch (e) {
-        console.warn('Gemini YT fallback error:', e)
-      }
     }
 
     setStatus('ready')
