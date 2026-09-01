@@ -4,7 +4,8 @@ import { queryWords, removeAccents, youtubeId } from './utils/formatters'
 import {
   fetchYoutubeCaptions,
   performAiSemanticSearch,
-  transcribeWithOpenAI
+  transcribeWithOpenAI,
+  createRequestController
 } from './utils/youtubeTranscripts'
 import { Topbar } from './components/Topbar'
 import { Hero } from './components/Hero'
@@ -45,6 +46,7 @@ export function App() {
 
   const videoRef = useRef()
   const clipEnd = useRef(null)
+  const transcriptionRequest = useRef(null)
 
   useEffect(
     () => () => {
@@ -131,6 +133,7 @@ export function App() {
 
   const transcribe = async () => {
     if (!source) return
+    if (status === 'transcribing') return
 
     if (!apiKey && apiProvider !== 'local') {
       setIsNoKeyModalOpen(true)
@@ -139,6 +142,8 @@ export function App() {
 
     setStatus('transcribing')
     setError('')
+    const request = createRequestController(10 * 60 * 1000)
+    transcriptionRequest.current = request
 
     if (source.type === 'youtube' && window.frameFinderDesktop?.transcribeYouTube) {
       try {
@@ -154,6 +159,8 @@ export function App() {
           if (lastSeg?.end) setMediaDuration(lastSeg.end)
           setStatus('ready')
           setTranscriptionProgress('')
+          request.cleanup()
+          transcriptionRequest.current = null
           return
         }
       } catch (err) {
@@ -167,18 +174,23 @@ export function App() {
     // 1. Uploaded local file with OpenAI API Key -> Call Whisper
     if (source.file && apiKey && apiProvider === 'openai') {
       try {
-        const whisperSegments = await transcribeWithOpenAI(source.file, apiKey)
+        const whisperSegments = await transcribeWithOpenAI(source.file, apiKey, request.controller.signal)
         if (whisperSegments && whisperSegments.length > 0) {
           setSegments(whisperSegments)
           const lastSeg = whisperSegments[whisperSegments.length - 1]
           if (lastSeg?.end) setMediaDuration(lastSeg.end)
           setStatus('ready')
+          request.cleanup()
+          transcriptionRequest.current = null
           return
         }
       } catch (err) {
+        if (err.name === 'AbortError') return
         console.warn('Whisper API error:', err)
         setError(`${msg('Błąd Whisper API', 'Whisper API error', 'Whisper-API-Fehler', 'Error de la API de Whisper')}: ${err.message}`)
         setStatus('ready')
+        request.cleanup()
+        transcriptionRequest.current = null
         return
       }
     }
@@ -193,6 +205,17 @@ export function App() {
 
     setError(msg('Aby wygenerować transkrypcję AI, dodaj swój klucz API w ustawieniach.', 'Add your API key in settings to generate an AI transcript.', 'Füge deinen API-Schlüssel in den Einstellungen hinzu, um ein KI-Transkript zu erstellen.', 'Añade tu clave API en los ajustes para generar una transcripción con IA.'))
     setStatus('ready')
+    request.cleanup()
+    transcriptionRequest.current = null
+  }
+
+  const cancelTranscription = () => {
+    transcriptionRequest.current?.controller.abort()
+    transcriptionRequest.current?.cleanup()
+    transcriptionRequest.current = null
+    setStatus('ready')
+    setTranscriptionProgress('')
+    setError(msg('Transkrypcja została anulowana.', 'Transcription cancelled.', 'Transkription abgebrochen.', 'Transcripción cancelada.'))
   }
 
   const importYoutube = async event => {
@@ -421,6 +444,7 @@ export function App() {
               activeResult={activeResult}
               playClip={playClip}
               transcribe={transcribe}
+              cancelTranscription={cancelTranscription}
               status={status}
               transcriptionProgress={transcriptionProgress}
               error={error}

@@ -18,6 +18,7 @@ export function MediaPanel({
   activeResult,
   playClip,
   transcribe,
+  cancelTranscription,
   status,
   transcriptionProgress,
   error,
@@ -182,10 +183,10 @@ export function MediaPanel({
         </>
       ) : (
         <>
-          <button className="primary-action" onClick={transcribe} disabled={status === 'transcribing'}>
+          <button className="primary-action" onClick={status === 'transcribing' ? cancelTranscription : transcribe}>
             {status === 'transcribing' ? <LoaderCircle className="spin" size={17} /> : <Captions size={17} />}
             {status === 'transcribing'
-              ? transcriptionProgress || `${t('generate')} (${providerName})...`
+              ? 'ANULUJ TRANSKRYPCJĘ'
               : apiKey || apiProvider === 'local'
               ? `${t('runTranscription')} (${providerName})`
               : t('runTranscription')}

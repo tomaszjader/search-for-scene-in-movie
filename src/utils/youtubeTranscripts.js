@@ -1,3 +1,35 @@
+const DEFAULT_TIMEOUT = 45_000
+
+export function createRequestController(timeout = DEFAULT_TIMEOUT) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeout)
+  return { controller, cleanup: () => clearTimeout(timer) }
+}
+
+async function fetchWithTimeout(url, options = {}, timeout = DEFAULT_TIMEOUT) {
+  const request = createRequestController(timeout)
+  try {
+    return await fetch(url, { ...options, signal: options.signal || request.controller.signal })
+  } catch (error) {
+    if (options.signal?.aborted) throw error
+    if (error.name === 'AbortError') {
+      throw new Error('Przekroczono limit czasu żądania. Sprawdź połączenie i spróbuj ponownie.')
+    }
+    throw new Error('Błąd sieci. Sprawdź połączenie internetowe i spróbuj ponownie.')
+  } finally {
+    request.cleanup()
+  }
+}
+
+export function apiError(response, fallback = 'Wystąpił błąd usługi.') {
+  if (response.status === 401 || response.status === 403) {
+    return 'Klucz API jest nieprawidłowy lub nie ma wymaganych uprawnień.'
+  }
+  if (response.status === 429) return 'Limit zapytań został przekroczony. Spróbuj ponownie za chwilę.'
+  if (response.status >= 500) return 'Usługa chwilowo nie działa. Spróbuj ponownie później.'
+  return fallback
+}
+
 /**
  * Validates an API key against OpenAI, Gemini, or Groq servers.
  */
@@ -217,7 +249,7 @@ export async function fetchYoutubeCaptions(videoId) {
 /**
  * Perform AI Agent Semantic Search strictly grounded in exact spoken transcript quote
  */
-export async function performAiSemanticSearch(query, segments, apiKey) {
+export async function performAiSemanticSearch(query, segments, apiKey, signal) {
   const sampleCount = Math.min(80, segments.length)
   const step = Math.max(1, Math.floor(segments.length / sampleCount))
   const sampledSegments = segments.filter((_, idx) => idx % step === 0).slice(0, 80)
@@ -244,12 +276,13 @@ Zwróć WYŁĄCZNIE prawidłowy obiekt JSON w formacie:
   ]
 }`
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetchWithTimeout('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`
     },
+    signal,
     body: JSON.stringify({
       model: 'gpt-4o-mini',
       messages: [{ role: 'user', content: prompt }],
@@ -257,7 +290,7 @@ Zwróć WYŁĄCZNIE prawidłowy obiekt JSON w formacie:
     })
   })
 
-  if (!response.ok) return null
+  if (!response.ok) throw new Error(apiError(response, `Błąd wyszukiwania AI (HTTP ${response.status}).`))
 
   const data = await response.json()
   const content = data.choices?.[0]?.message?.content || ''
@@ -272,7 +305,7 @@ Zwróć WYŁĄCZNIE prawidłowy obiekt JSON w formacie:
 /**
  * Transcribes audio/video file using OpenAI Whisper API directly from browser
  */
-export async function transcribeWithOpenAI(file, apiKey) {
+export async function transcribeWithOpenAI(file, apiKey, signal) {
   const formData = new FormData()
   formData.append('file', file)
   formData.append('model', 'whisper-1')
@@ -280,17 +313,18 @@ export async function transcribeWithOpenAI(file, apiKey) {
   formData.append('timestamp_granularities[]', 'segment')
   formData.append('language', 'pl')
 
-  const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+  const response = await fetchWithTimeout('https://api.openai.com/v1/audio/transcriptions', {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${apiKey}`
     },
+    signal,
     body: formData
   })
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))
-    throw new Error(errorData.error?.message || `Błąd API OpenAI: HTTP ${response.status}`)
+    throw new Error(errorData.error?.message || apiError(response, `Błąd API OpenAI: HTTP ${response.status}.`))
   }
 
   const data = await response.json()
