@@ -10,7 +10,9 @@ export const fmt = value => {
 }
 
 export const removeAccents = str =>
-  str ? str.normalize('NFD').replace(/[\u0300-\u036f]/g, '') : ''
+  str
+    ? str.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[łŁ]/g, char => (char === 'Ł' ? 'L' : 'l'))
+    : ''
 
 export const queryWords = value =>
   removeAccents(value.toLowerCase())
